@@ -684,6 +684,255 @@ Second text slide.
     }
   });
 </script>
+## Globe (MapLibre + PMTiles) {.scrollable}
+
+```{=html}
+<link href="https://unpkg.com/maplibre-gl@5.0.0/dist/maplibre-gl.css" rel="stylesheet" />
+<div style="display:flex; gap:12px; align-items:center; margin-bottom:8px;">
+  <label for="pm-layer-select">Layer:</label>
+  <select id="pm-layer-select">
+    <option value="old" selected>old</option>
+    <option value="new">new</option>
+  </select>
+  <div style="flex:1"></div>
+  <small>PMTiles from provided URL; options all reference the same dataset.</small>
+</div>
+<div id="ml-pmtiles-globe" style="height: 420px; margin-top: 0.5rem;"></div>
+<div style="margin-top:8px; display:flex; gap:12px; align-items:center; flex-wrap: wrap;">
+  <div id="ml-edr" style="font-size:12px; color:#333; white-space:pre-wrap;">Click on the map to fetch HM EDR time series…</div>
+  <div style="flex:1"></div>
+  <canvas id="ml-edr-chart" height="120" style="max-height:140px; width: 38vw; max-width: 480px;"></canvas>
+  </div>
+```
+
+<script src="https://unpkg.com/maplibre-gl@5.0.0/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/pmtiles@3/dist/pmtiles.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0"></script>
+<script>
+  let mlPmInited = false;
+  let mlEdrChart = null;
+  function initMlPmGlobe() {
+    if (mlPmInited) return;
+    mlPmInited = true;
+
+    if (!window.maplibregl || !window.pmtiles) {
+      console.error('MapLibre GL or PMTiles not loaded');
+      return;
+    }
+
+    const protocol = new pmtiles.Protocol();
+    if (typeof maplibregl.addProtocol === 'function') {
+      maplibregl.addProtocol('pmtiles', protocol.tile);
+    }
+
+    // Minimal blank style; we'll add Esri + PMTiles sources/layers explicitly
+    const blankStyle = { version: 8, sources: {}, layers: [], name: 'blank' };
+    const map = new maplibregl.Map({
+      container: 'ml-pmtiles-globe',
+      style: blankStyle,
+      center: [18.48, -33.8518],
+      zoom: 1.8,
+      attributionControl: true
+    });
+
+    map.on('style.load', () => {
+      // MapLibre GL JS 5.x globe projection API
+      try { map.setProjection({ type: 'globe' }); } catch (e) { console.warn('Globe projection not available:', e); }
+      // Esri World Imagery basemap (XYZ)
+      const esriSrcId = 'esri-world';
+      const esriLayerId = 'esri-world';
+      if (!map.getSource(esriSrcId)) {
+        map.addSource(esriSrcId, {
+          type: 'raster',
+          tiles: ['https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+          tileSize: 256,
+          attribution: 'Esri, Maxar, Earthstar Geographics, and the GIS User Community'
+        });
+      }
+      if (!map.getLayer(esriLayerId)) {
+        map.addLayer({ id: esriLayerId, type: 'raster', source: esriSrcId });
+      }
+
+      // PMTiles raster sources: old and new
+      const pmtilesOld = 'https://pub-6b6a1d5b041c4c749efaeb294cda9aac.r2.dev/land_z0-8.pmtiles';
+      const pmtilesNew = 'https://pub-6b6a1d5b041c4c749efaeb294cda9aac.r2.dev/land_z0-7.pmtiles';
+      const srcOldId = 'pmtiles-old';
+      const srcNewId = 'pmtiles-new';
+      const layerOldId = 'pmtiles-old';
+      const layerNewId = 'pmtiles-new';
+      if (!map.getSource(srcOldId)) {
+        map.addSource(srcOldId, { type: 'raster', tiles: [`pmtiles://${pmtilesOld}/{z}/{x}/{y}`], tileSize: 512 });
+      }
+      if (!map.getSource(srcNewId)) {
+        map.addSource(srcNewId, { type: 'raster', tiles: [`pmtiles://${pmtilesNew}/{z}/{x}/{y}`], tileSize: 512 });
+      }
+      if (!map.getLayer(layerOldId)) {
+        map.addLayer({ id: layerOldId, type: 'raster', source: srcOldId, paint: { 'raster-opacity': 0.95 } });
+      }
+      if (!map.getLayer(layerNewId)) {
+        map.addLayer({ id: layerNewId, type: 'raster', source: srcNewId, paint: { 'raster-opacity': 0.95 } });
+      }
+      // Show 'old' by default, hide 'new'
+      try {
+        map.setLayoutProperty(layerOldId, 'visibility', 'visible');
+        map.setLayoutProperty(layerNewId, 'visibility', 'none');
+      } catch {}
+
+      // Selector wiring: toggle between 'old' and 'new' layers
+      const sel = document.getElementById('pm-layer-select');
+      if (sel) {
+        sel.addEventListener('change', () => {
+          const val = sel.value;
+          const showOld = (val === 'old');
+          try {
+            map.setLayoutProperty(layerOldId, 'visibility', showOld ? 'visible' : 'none');
+            map.setLayoutProperty(layerNewId, 'visibility', showOld ? 'none' : 'visible');
+          } catch (e) { console.warn('Layer toggle error', e); }
+        });
+      }
+
+      // EDR click handler (replicates Mapbox slide behavior)
+      const edrEl = document.getElementById('ml-edr');
+      const chartEl = document.getElementById('ml-edr-chart');
+      const CUTOVER_MS = Date.UTC(2020, 0, 1);
+
+      function ensureSpinnerCss() {
+        if (!document.getElementById('edr-spinner-style')) {
+          const style = document.createElement('style');
+          style.id = 'edr-spinner-style';
+          style.textContent = `
+            .edr-spinner { display:inline-block; width:14px; height:14px; border:2px solid rgba(0,0,0,0.15); border-top-color: rgba(0,0,0,0.6); border-radius:50%; animation: edr-spin 0.8s linear infinite; vertical-align:middle; }
+            @keyframes edr-spin { to { transform: rotate(360deg); } }
+          `;
+          document.head.appendChild(style);
+        }
+      }
+
+      async function fetchEdrSeries(lng, lat) {
+        ensureSpinnerCss();
+        if (edrEl) edrEl.innerHTML = '<span class="edr-spinner" aria-label="Loading" title="Loading"></span>';
+        const coordsWKT = `POINT(${lng} ${lat})`;
+        const makeUrl = (param) => `https://compute.earthmover.io/v1/services/edr/the-nature-conservancy/hm-multitemp/main/hm/edr/position?coords=${encodeURIComponent(coordsWKT)}&parameter-name=${param}`;
+        const paramsList = ['upper','middle','lower'];
+        const results = await Promise.all(paramsList.map(p => fetch(makeUrl(p)).then(r => r.json()).then(data => ({ p, data })).catch(error => ({ p, error }))));
+
+        const START_MS = Date.parse('1990-01-01');
+        const CUTOVER_MS = Date.parse('2020-01-01');
+        const END_MS = Date.parse('2040-01-01');
+
+        const series = { upper: [], middle: [], lower: [] };
+        results.forEach(({ p, data, error }) => {
+          if (error || !data || !series[p]) return;
+          const dates = data?.domain?.axes?.date?.values || data?.domain?.axes?.t?.values || [];
+          const vals = data?.ranges?.[p]?.values || [];
+          if (Array.isArray(dates) && Array.isArray(vals) && dates.length && vals.length) {
+            series[p] = dates
+              .map((d, i) => ({ x: Date.parse(d), y: vals[i] }))
+              .filter(pt => Number.isFinite(pt.x) && Number.isFinite(pt.y) && pt.x >= START_MS && pt.x <= END_MS)
+              .sort((a,b) => a.x - b.x);
+          }
+        });
+
+        // Build confidence band arrays from CUTOVER forward, bridged at CUTOVER using middle value
+        const lastObservedMiddle = [...series.middle].filter(pt => pt.x <= CUTOVER_MS).sort((a,b) => a.x - b.x).slice(-1)[0];
+        const cutY = lastObservedMiddle ? lastObservedMiddle.y : null;
+        let lowerBand = series.lower.filter(pt => pt.x >= CUTOVER_MS);
+        let upperBand = series.upper.filter(pt => pt.x >= CUTOVER_MS);
+        if (cutY !== null) {
+          lowerBand = [{ x: CUTOVER_MS, y: cutY }, ...lowerBand];
+          upperBand = [{ x: CUTOVER_MS, y: cutY }, ...upperBand];
+        }
+
+        // Split middle into observed/predicted with bridging point
+        let observed = series.middle.map(pt => (pt.x <= CUTOVER_MS ? pt : { x: pt.x, y: null }));
+        let predicted = series.middle.filter(pt => pt.x >= CUTOVER_MS);
+        const prevPt = [...series.middle].filter(pt => pt.x <= CUTOVER_MS).sort((a,b) => a.x - b.x).slice(-1)[0];
+        const hasCutObserved = observed.some(pt => pt.x === CUTOVER_MS && pt.y !== null);
+        const hasCutPred = predicted.some(pt => pt.x === CUTOVER_MS);
+        if (prevPt) {
+          const bridge = { x: CUTOVER_MS, y: prevPt.y };
+          if (!hasCutObserved) observed = [...observed.filter(pt => pt.x < CUTOVER_MS), bridge, ...observed.filter(pt => pt.x > CUTOVER_MS)];
+          if (!hasCutPred) predicted = [bridge, ...predicted];
+        }
+        observed.sort((a,b) => a.x - b.x);
+        predicted.sort((a,b) => a.x - b.x);
+
+        return { series, lowerBand, upperBand, observed, predicted, START_MS, END_MS };
+      }
+
+      function renderChart(res) {
+        const ctx = chartEl?.getContext('2d');
+        if (!ctx) return;
+        try { if (mlEdrChart) { mlEdrChart.destroy(); } } catch(_) {}
+        mlEdrChart = null;
+
+        const colors = { upper: '#e41a1c', middle: '#377eb8', lower: '#4daf4a' };
+        const lowerDs = { label: '', data: res.lowerBand, borderColor: 'transparent', backgroundColor: 'transparent', pointRadius: 0, borderWidth: 0, tension: 0.2, fill: false };
+        const bandDs = { label: '95% confidence', data: res.upperBand, borderColor: 'transparent', backgroundColor: (colors.upper || '#e41a1c') + '33', pointRadius: 0, borderWidth: 0, tension: 0.2, fill: '-1' };
+        const observedDs = { label: 'observed', data: res.observed, borderColor: colors.middle, backgroundColor: 'transparent', pointRadius: 0, borderWidth: 2, borderDash: [], tension: 0.2, fill: false };
+        const predictedDs = { label: 'predicted', data: res.predicted, borderColor: colors.middle, backgroundColor: 'transparent', pointRadius: 0, borderWidth: 2, borderDash: [6,4], tension: 0.2, fill: false };
+
+        mlEdrChart = new Chart(ctx, {
+          type: 'line',
+          data: { datasets: [lowerDs, bandDs, observedDs, predictedDs] },
+          options: {
+            maintainAspectRatio: false,
+            parsing: false,
+            spanGaps: true,
+            scales: {
+              x: { type: 'linear', min: res.START_MS, max: res.END_MS, ticks: { maxTicksLimit: 6, callback: (v) => { try { return new Date(v).toISOString().slice(0, 4); } catch { return v; } } } },
+              y: { title: { display: true, text: 'Human Modification Index' } }
+            },
+            plugins: {
+              legend: { display: true, labels: { filter: (item) => !!item.text } },
+              tooltip: { callbacks: { label: (ctx) => { const label = ctx.dataset && typeof ctx.dataset.label === 'string' ? ctx.dataset.label : ''; if (!label || label.startsWith('_')) return null; const x = ctx.parsed.x; const y = ctx.parsed.y; const ts = new Date(x).toISOString().slice(0,19).replace('T',' '); return ` ${label}: ${y}  •  ${ts}`; } } }
+            }
+          }
+        });
+      }
+
+      // Click marker
+      let clickMarker = null;
+      map.on('click', async (e) => {
+        const { lng, lat } = e.lngLat;
+        try { if (clickMarker) { clickMarker.remove(); } } catch(_) {}
+        clickMarker = new maplibregl.Marker({ color: '#e11d48', scale: 0.9 })
+          .setLngLat([lng, lat])
+          .addTo(map);
+        try {
+          const result = await fetchEdrSeries(lng, lat);
+          if (edrEl) edrEl.textContent = `EDR at (${lng.toFixed(4)}, ${lat.toFixed(4)})`;
+          renderChart(result);
+        } catch (err) {
+          if (edrEl) edrEl.textContent = 'EDR error';
+          console.error('EDR error:', err);
+        }
+      });
+
+      // Resize passes after layout transition
+      setTimeout(() => map.resize(), 200);
+      requestAnimationFrame(() => map.resize());
+    });
+  }
+
+  function maybeInitMlPmOnCurrentSlide() {
+    const current = window.Reveal && Reveal.getCurrentSlide ? Reveal.getCurrentSlide() : null;
+    if (current && current.querySelector('#ml-pmtiles-globe')) {
+      initMlPmGlobe();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.Reveal) {
+      Reveal.on('ready', maybeInitMlPmOnCurrentSlide);
+      Reveal.on('slidechanged', maybeInitMlPmOnCurrentSlide);
+    } else {
+      initMlPmGlobe();
+    }
+  });
+</script>
+
 ---
 
 ## Thanks!
