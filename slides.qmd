@@ -684,25 +684,62 @@ Second text slide.
     }
   });
 </script>
+
 ## Globe (MapLibre + PMTiles) {.scrollable}
 
 ```{=html}
 <link href="https://unpkg.com/maplibre-gl@5.0.0/dist/maplibre-gl.css" rel="stylesheet" />
-<div style="display:flex; gap:12px; align-items:center; margin-bottom:8px;">
-  <label for="pm-layer-select">Layer:</label>
-  <select id="pm-layer-select">
-    <option value="old" selected>old</option>
-    <option value="new">new</option>
-  </select>
-  <div style="flex:1"></div>
-  <small>PMTiles from provided URL; options all reference the same dataset.</small>
+<style>
+  /* MapLibre panel styling for a cleaner look */
+  .ml-controls { display:flex; flex-direction:column; gap:8px; margin-bottom:8px; font-size: 13px; }
+  .ml-panel { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  .ml-panel-title { font-weight:600; min-width:72px; font-size:13px; }
+  .ml-panel label, .ml-panel span, .ml-panel select, .ml-panel small { font-size:13px; }
+  .ml-chart-wrap { display:flex; justify-content:center; margin-top:10px; }
+  .ml-chart-inner { width: 72vw; max-width: 980px; }
+  #ml-edr { font-size:12px; color:#333; white-space:pre-wrap; text-align:center; margin-top:6px; }
+  #ml-edr-chart { width:100%; height: 300px; max-height: 340px; }
+  /* Tighten slider spacing */
+  .ml-slider { display:flex; align-items:center; gap:8px; }
+  .ml-spacer { flex:1; }
+</style>
+<div class="ml-controls">
+  <div class="ml-panel">
+    <div class="ml-panel-title">Layer A</div>
+    <label for="pm-layer-select-1">Source:</label>
+    <select id="pm-layer-select-1">
+      <option value="old" selected>old</option>
+      <option value="new">new</option>
+    </select>
+    <div class="ml-slider">
+      <span>Opacity</span>
+      <input type="range" id="pm-opacity-1" min="0" max="1" step="0.05" value="1">
+      <span id="pm-opacity-1-val">1.00</span>
+    </div>
+  </div>
+  <div class="ml-panel">
+    <div class="ml-panel-title">Layer B</div>
+    <label for="pm-layer-select-2">Source:</label>
+    <select id="pm-layer-select-2">
+      <option value="old">old</option>
+      <option value="new" selected>new</option>
+    </select>
+    <div class="ml-slider">
+      <span>Opacity</span>
+      <input type="range" id="pm-opacity-2" min="0" max="1" step="0.05" value="0">
+      <span id="pm-opacity-2-val">0.00</span>
+    </div>
+    <div class="ml-spacer"></div>
+    <small>PMTiles from provided URL; both selectors reference the same dataset family.</small>
+  </div>
 </div>
 <div id="ml-pmtiles-globe" style="height: 420px; margin-top: 0.5rem;"></div>
-<div style="margin-top:8px; display:flex; gap:12px; align-items:center; flex-wrap: wrap;">
-  <div id="ml-edr" style="font-size:12px; color:#333; white-space:pre-wrap;">Click on the map to fetch HM EDR time series…</div>
-  <div style="flex:1"></div>
-  <canvas id="ml-edr-chart" height="120" style="max-height:140px; width: 38vw; max-width: 480px;"></canvas>
+<div class="ml-chart-wrap">
+  <div class="ml-chart-inner">
+    <div id="ml-edr">Click on the map to fetch HM EDR time series…</div>
+    <canvas id="ml-edr-chart"></canvas>
   </div>
+</div>
 ```
 
 <script src="https://unpkg.com/maplibre-gl@5.0.0/dist/maplibre-gl.js"></script>
@@ -759,38 +796,64 @@ Second text slide.
       const pmtilesNew = 'https://pub-6b6a1d5b041c4c749efaeb294cda9aac.r2.dev/land_z0-7.pmtiles';
       const srcOldId = 'pmtiles-old';
       const srcNewId = 'pmtiles-new';
-      const layerOldId = 'pmtiles-old';
-      const layerNewId = 'pmtiles-new';
       if (!map.getSource(srcOldId)) {
         map.addSource(srcOldId, { type: 'raster', tiles: [`pmtiles://${pmtilesOld}/{z}/{x}/{y}`], tileSize: 512 });
       }
       if (!map.getSource(srcNewId)) {
         map.addSource(srcNewId, { type: 'raster', tiles: [`pmtiles://${pmtilesNew}/{z}/{x}/{y}`], tileSize: 512 });
       }
-      if (!map.getLayer(layerOldId)) {
-        map.addLayer({ id: layerOldId, type: 'raster', source: srcOldId, paint: { 'raster-opacity': 0.95 } });
-      }
-      if (!map.getLayer(layerNewId)) {
-        map.addLayer({ id: layerNewId, type: 'raster', source: srcNewId, paint: { 'raster-opacity': 0.95 } });
-      }
-      // Show 'old' by default, hide 'new'
-      try {
-        map.setLayoutProperty(layerOldId, 'visibility', 'visible');
-        map.setLayoutProperty(layerNewId, 'visibility', 'none');
-      } catch {}
+      // Create four layers (two panels x two sources)
+      const LYR = {
+        1: { old: 'pm1-old', new: 'pm1-new' },
+        2: { old: 'pm2-old', new: 'pm2-new' }
+      };
+      const ensureLayer = (id, source) => {
+        if (!map.getLayer(id)) {
+          map.addLayer({ id, type: 'raster', source, paint: { 'raster-opacity': 1.0 } });
+        }
+      };
+      ensureLayer(LYR[1].old, srcOldId);
+      ensureLayer(LYR[1].new, srcNewId);
+      ensureLayer(LYR[2].old, srcOldId);
+      ensureLayer(LYR[2].new, srcNewId);
 
-      // Selector wiring: toggle between 'old' and 'new' layers
-      const sel = document.getElementById('pm-layer-select');
-      if (sel) {
-        sel.addEventListener('change', () => {
-          const val = sel.value;
-          const showOld = (val === 'old');
-          try {
-            map.setLayoutProperty(layerOldId, 'visibility', showOld ? 'visible' : 'none');
-            map.setLayoutProperty(layerNewId, 'visibility', showOld ? 'none' : 'visible');
-          } catch (e) { console.warn('Layer toggle error', e); }
-        });
+      // Helpers to apply selection/opacity per panel
+      function applySelection(panel, value) {
+        const showOld = value === 'old';
+        try {
+          map.setLayoutProperty(LYR[panel].old, 'visibility', showOld ? 'visible' : 'none');
+          map.setLayoutProperty(LYR[panel].new, 'visibility', showOld ? 'none' : 'visible');
+        } catch (e) { console.warn('Layer toggle error', e); }
       }
+      function applyOpacity(panel, value) {
+        try {
+          map.setPaintProperty(LYR[panel].old, 'raster-opacity', value);
+          map.setPaintProperty(LYR[panel].new, 'raster-opacity', value);
+        } catch (e) { console.warn('Opacity set error', e); }
+      }
+
+      // Wire UI controls
+      const sel1 = document.getElementById('pm-layer-select-1');
+      const sel2 = document.getElementById('pm-layer-select-2');
+      const op1 = document.getElementById('pm-opacity-1');
+      const op2 = document.getElementById('pm-opacity-2');
+      const op1Val = document.getElementById('pm-opacity-1-val');
+      const op2Val = document.getElementById('pm-opacity-2-val');
+
+      // Initial state: A old @ 1.00, B new @ 0.00
+      applySelection(1, sel1 ? sel1.value : 'old');
+      applySelection(2, sel2 ? sel2.value : 'new');
+      const initOp1 = op1 ? parseFloat(op1.value) : 1.0;
+      const initOp2 = op2 ? parseFloat(op2.value) : 0.0;
+      applyOpacity(1, initOp1);
+      applyOpacity(2, initOp2);
+      if (op1Val) op1Val.textContent = initOp1.toFixed(2);
+      if (op2Val) op2Val.textContent = initOp2.toFixed(2);
+
+      if (sel1) sel1.addEventListener('change', () => applySelection(1, sel1.value));
+      if (sel2) sel2.addEventListener('change', () => applySelection(2, sel2.value));
+      if (op1) op1.addEventListener('input', () => { const v = parseFloat(op1.value); if (op1Val) op1Val.textContent = v.toFixed(2); applyOpacity(1, v); });
+      if (op2) op2.addEventListener('input', () => { const v = parseFloat(op2.value); if (op2Val) op2Val.textContent = v.toFixed(2); applyOpacity(2, v); });
 
       // EDR click handler (replicates Mapbox slide behavior)
       const edrEl = document.getElementById('ml-edr');
@@ -929,6 +992,115 @@ Second text slide.
       Reveal.on('slidechanged', maybeInitMlPmOnCurrentSlide);
     } else {
       initMlPmGlobe();
+    }
+  });
+</script>
+
+---
+
+## Globe (MapLibre – New only)
+
+```{=html}
+<style>
+  /* Scoped styles for 2nd MapLibre legend (Inferno categories) */
+  .ml2-map-wrap { position: relative; }
+  .ml2-legend { position:absolute; right:10px; top:10px; z-index:1000; background:rgba(255,255,255,0.94); padding:8px 10px; border-radius:4px; font-size:13px; box-shadow:0 1px 4px rgba(0,0,0,0.2); }
+  .ml2-legend-item { display:flex; align-items:center; gap:8px; margin:4px 0; }
+  .ml2-swatch { width:14px; height:14px; border:1px solid rgba(0,0,0,0.4); border-radius:2px; }
+  .ml2-ctrl { margin-top:6px; font-size:12px; display:flex; align-items:center; gap:8px; }
+  .ml2-ctrl input[type="range"] { width:120px; }
+  @media (max-width: 720px) { .ml2-legend { font-size:12px; } }
+</style>
+<div class="ml2-map-wrap">
+  <div id="ml-pmtiles-globe-2" style="height: 460px; margin-top: 0.5rem;"></div>
+  <div class="ml2-legend" aria-label="Map legend">
+    <div class="ml2-legend-item"><span class="ml2-swatch" style="background:#3b0f70;"></span><span>intact</span></div>
+    <div class="ml2-legend-item"><span class="ml2-swatch" style="background:#9c179e;"></span><span>converted 97.5%</span></div>
+    <div class="ml2-legend-item"><span class="ml2-swatch" style="background:#f98e09;"></span><span>converted 50%</span></div>
+    <div class="ml2-legend-item"><span class="ml2-swatch" style="background:#fcffa4;"></span><span>converted 2.5%</span></div>
+    <div class="ml2-ctrl">
+      <span>Opacity</span>
+      <input id="ml2-opacity" type="range" min="0" max="1" step="0.05" value="0.95" />
+      <span id="ml2-opacity-val">0.95</span>
+    </div>
+  </div>
+</div>
+```
+
+<script>
+  let mlPm2Inited = false;
+  function initMlPmGlobe2() {
+    if (mlPm2Inited) return;
+    mlPm2Inited = true;
+    if (!window.maplibregl || !window.pmtiles) {
+      console.error('MapLibre GL or PMTiles not loaded');
+      return;
+    }
+    // Register pmtiles protocol (ignore if already registered)
+    try {
+      const protocol2 = new pmtiles.Protocol();
+      if (typeof maplibregl.addProtocol === 'function') {
+        try { maplibregl.addProtocol('pmtiles', protocol2.tile); } catch (_) {}
+      }
+    } catch (_) {}
+
+    const blankStyle = { version: 8, sources: {}, layers: [], name: 'blank' };
+    const map2 = new maplibregl.Map({
+      container: 'ml-pmtiles-globe-2',
+      style: blankStyle,
+      center: [18.48, -33.8518],
+      zoom: 2,
+      attributionControl: true
+    });
+
+    map2.on('style.load', () => {
+      try { map2.setProjection({ type: 'globe' }); } catch (e) { console.warn('Globe projection not available:', e); }
+      // Esri basemap
+      const esriSrcId = 'esri-world-2';
+      const esriLayerId = 'esri-world-2';
+      map2.addSource(esriSrcId, {
+        type: 'raster',
+        tiles: ['https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+        tileSize: 256,
+        attribution: 'Esri, Maxar, Earthstar Geographics, and the GIS User Community'
+      });
+      map2.addLayer({ id: esriLayerId, type: 'raster', source: esriSrcId });
+
+      // PMTiles: show 'new' only
+      const pmtilesNew = 'https://pub-6b6a1d5b041c4c749efaeb294cda9aac.r2.dev/land_z0-7.pmtiles';
+      const srcNewId = 'pmtiles-new-2';
+      const layerNewId = 'pmtiles-new-2';
+      map2.addSource(srcNewId, { type: 'raster', tiles: [`pmtiles://${pmtilesNew}/{z}/{x}/{y}`], tileSize: 512 });
+      map2.addLayer({ id: layerNewId, type: 'raster', source: srcNewId, paint: { 'raster-opacity': 0.95 } });
+
+      // Opacity slider wiring
+      const op = document.getElementById('ml2-opacity');
+      const opVal = document.getElementById('ml2-opacity-val');
+      if (op) {
+        const setOp = (v) => { try { map2.setPaintProperty(layerNewId, 'raster-opacity', v); if (opVal) opVal.textContent = (+v).toFixed(2); } catch(e) {} };
+        setOp(parseFloat(op.value || '0.95'));
+        op.addEventListener('input', () => setOp(parseFloat(op.value)));
+      }
+
+      // Resize nudges
+      setTimeout(() => map2.resize(), 200);
+      requestAnimationFrame(() => map2.resize());
+    });
+  }
+
+  function maybeInitMlPm2OnCurrentSlide() {
+    const current = window.Reveal && Reveal.getCurrentSlide ? Reveal.getCurrentSlide() : null;
+    if (current && current.querySelector('#ml-pmtiles-globe-2')) {
+      initMlPmGlobe2();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.Reveal) {
+      Reveal.on('ready', maybeInitMlPm2OnCurrentSlide);
+      Reveal.on('slidechanged', maybeInitMlPm2OnCurrentSlide);
+    } else {
+      initMlPmGlobe2();
     }
   });
 </script>
