@@ -1,0 +1,34 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.mypy_cache/
+.pytest_cache/
+
+# Virtual/env files
+.venv/
+.env
+.env.*
+.python-version
+
+# Quarto / Reveal.js build artifacts
+index.html
+slides_files/
+assets/
+.quarto/
+_freeze/
+
+# Node
+node_modules/
+
+# Editors/IDEs
+.vscode/
+.idea/
+
+# Logs
+*.log

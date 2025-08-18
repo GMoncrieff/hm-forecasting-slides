@@ -1,0 +1,16 @@
+name: hm-forecasting-slides
+channels:
+  - conda-forge
+dependencies:
+  # Python (not strictly required for your current HTML/JS slides, but useful)
+  - python=3.11
+
+  # Quarto CLI to render the Reveal.js slides
+  - quarto
+
+  # Pandoc is bundled with Quarto, but listing explicitly is harmless
+  - pandoc
+
+  # Optional: handy tools during development
+  - nodejs>=18  # only if you plan to manage JS locally (optional)
+  - git  

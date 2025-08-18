@@ -1,0 +1,904 @@
+---
+title: "Leaflet + PMTiles demo"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    # ↓↓↓ add these two lines
+    scrollable: true     # allow the page itself to scroll
+    center: false        # start content at the top, not vertically centred
+output-file: index.html
+---
+
+```{=html}
+<style>
+  /* Disable vertical scrolling only on slides with the .no-scroll class */
+  .reveal .slide.no-scroll { overflow-y: hidden !important; }
+</style>
+```
+
+```{=html}
+<script>
+  // Global token for the whole deck (read from env at render time)
+  window.MAPBOX_TOKEN = "{{< env MAPBOX_TOKEN >}}";
+  if (!window.MAPBOX_TOKEN) {
+    console.warn('MAPBOX_TOKEN env var not set. Mapbox slide may not load.');
+  }
+  if (window.mapboxgl && window.MAPBOX_TOKEN) {
+    mapboxgl.accessToken = window.MAPBOX_TOKEN;
+  }
+</script>
+```
+
+## Welcome
+
+First text slide.
+
+
+blag
+
+adgag
+
+sgds
+sfg
+
+sfsf. 
+sgs
+
+sdgfs
+  
+
+  sdg
+    sdg
+
+
+sdfg. 
+
+sdg.
+
+erqe
+
+reqq.  
+rwryw.   
+rtw. 
+
+qeqq. 
+
+wryuyi
+  
+
+  rrr
+
+
+  mmm
+     w
+
+      wrwg
+      wwrg
+
+
+      wsgw
+wrgw
+   
+wew
+
+wrw 
+  w 
+    wrgw
+
+---
+
+## Another text slide
+
+Second text slide.
+
+---
+
+## Map {.no-scroll}
+
+```{=html}
+<!-- Leaflet container -->
+<link rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<div id="map-wrap" style="position: relative;">
+  <div id="map" style="height: 500px; margin-top: 1rem;"></div>
+  <!-- Simple custom layer toggles -->
+  <div id="layer-controls" class="layer-controls" style="position:absolute; right:10px; top:10px; z-index:1000; background:rgba(255,255,255,0.92); padding:8px 10px; border-radius:4px; font-size:14px; box-shadow:0 1px 4px rgba(0,0,0,0.2);">
+    <div style="font-weight:600; margin-bottom:4px;">Overlays</div>
+    <div style="margin-bottom:4px;">
+      <div style="font-weight:500;">New</div>
+      <label><input type="checkbox" id="layer-hm1" checked> HM1</label>
+    </div>
+    <div>
+      <div style="font-weight:500;">Old</div>
+      <label><input type="checkbox" id="layer-hm2"> HM2</label>
+      <label><input type="checkbox" id="layer-hm3"> HM3</label>
+    </div>
+  </div>
+  
+</div>
+
+```
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/pmtiles@4.3.0/dist/pmtiles.js"></script>
+
+<script>
+  // Initialize only when this slide is visible; ensure sizing after render
+  let mapInited = false;
+  function initMap() {
+    if (mapInited) return;
+    mapInited = true;
+
+    const map = L.map('map', { zoomControl: true });
+    const initialCenter = [-33.8518, 18.48];
+    const initialZoom = 8;
+    map.setView(initialCenter, initialZoom);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const url = "https://pub-6b6a1d5b041c4c749efaeb294cda9aac.r2.dev/hm_1990_rgb.pmtiles";
+
+    // Create three raster layers from the same PMTiles source
+    const p1 = new pmtiles.PMTiles(url);
+    const p2 = new pmtiles.PMTiles(url);
+    const p3 = new pmtiles.PMTiles(url);
+
+    const hm1 = pmtiles.leafletRasterLayer(p1);
+    const hm2 = pmtiles.leafletRasterLayer(p2);
+    const hm3 = pmtiles.leafletRasterLayer(p3);
+
+    // Add HM1 by default; others can be toggled on
+    hm1.addTo(map);
+
+    // Wire up custom checkbox controls
+    const c1 = document.getElementById('layer-hm1');
+    const c2 = document.getElementById('layer-hm2');
+    const c3 = document.getElementById('layer-hm3');
+
+    function syncLayer(checkbox, layer) {
+      if (!checkbox) return;
+      if (checkbox.checked) {
+        if (!map.hasLayer(layer)) layer.addTo(map);
+      } else {
+        if (map.hasLayer(layer)) map.removeLayer(layer);
+      }
+    }
+
+    // initial sync (HM1 checked by default)
+    syncLayer(c1, hm1);
+    syncLayer(c2, hm2);
+    syncLayer(c3, hm3);
+
+    [
+      [c1, hm1],
+      [c2, hm2],
+      [c3, hm3]
+    ].forEach(([cb, layer]) => {
+      if (cb) cb.addEventListener('change', () => syncLayer(cb, layer));
+    });
+
+    // Ensure sizing is correct after header is ready (any source ok)
+    p1.getHeader().then(() => {
+      map.invalidateSize();
+    });
+
+    // Also trigger after first paint
+    requestAnimationFrame(() => map.invalidateSize(true));
+  }
+
+  function maybeInitOnCurrentSlide() {
+    const current = window.Reveal && Reveal.getCurrentSlide ? Reveal.getCurrentSlide() : null;
+    if (current && current.querySelector('#map')) {
+      initMap();
+      // extra nudge after transition
+      setTimeout(() => window.dispatchEvent(new Event('resize')), 200);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.Reveal) {
+      Reveal.on('ready', maybeInitOnCurrentSlide);
+      Reveal.on('slidechanged', maybeInitOnCurrentSlide);
+    } else {
+      initMap();
+    }
+  });
+</script>
+
+---
+
+## Globe (MapLibre) {.no-scroll}
+
+```{=html}
+<link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
+<div id="ml-globe-wrap" style="position:relative;">
+  <div id="ml-globe" style="height: 500px; margin-top: 1rem;"></div>
+</div>
+```
+
+<script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+<script>
+  let mlGlobeInited = false;
+  function initMlGlobe() {
+    if (mlGlobeInited) return;
+    mlGlobeInited = true;
+
+    const map = new maplibregl.Map({
+      container: 'ml-globe',
+      style: 'https://demotiles.maplibre.org/style.json',
+      center: [18.48, -33.8518],
+      zoom: 2.2,
+      attributionControl: true
+    });
+
+    map.on('load', () => {
+      // Switch to globe projection once style is loaded
+      if (map.setProjection) {
+        map.setProjection({ name: 'globe' });
+      }
+      // Optional sky for nicer atmosphere
+      if (!map.getLayer('sky')) {
+        try {
+          map.addLayer({
+            id: 'sky',
+            type: 'sky',
+            paint: {
+              'sky-type': 'atmosphere',
+              'sky-atmosphere-sun-intensity': 10
+            }
+          });
+        } catch (e) {
+          console.warn('Sky layer unsupported:', e);
+        }
+      }
+      // Ensure proper sizing after transition
+      setTimeout(() => map.resize(), 200);
+      requestAnimationFrame(() => map.resize());
+    });
+  }
+
+  function maybeInitMlGlobeOnCurrentSlide() {
+    const current = window.Reveal && Reveal.getCurrentSlide ? Reveal.getCurrentSlide() : null;
+    if (current && current.querySelector('#ml-globe')) {
+      initMlGlobe();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.Reveal) {
+      Reveal.on('ready', maybeInitMlGlobeOnCurrentSlide);
+      Reveal.on('slidechanged', maybeInitMlGlobeOnCurrentSlide);
+    } else {
+      initMlGlobe();
+    }
+  });
+</script>
+
+---
+
+## Globe (Mapbox + WMS)
+
+```{=html}
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.9.3/mapbox-gl.css" rel="stylesheet" />
+<div id="mb-globe-wrap" style="position:relative;">
+  <div id="mb-globe" style="height: 500px; margin-top: 1rem;"></div>
+  <!-- Layer toggle controls: Panel 1 -->
+  <div id="mb-layer-controls-1" style="position:absolute; right:10px; top:10px; z-index:1000; background:rgba(255,255,255,0.92); padding:8px 10px; border-radius:4px; font-size:14px; box-shadow:0 1px 4px rgba(0,0,0,0.2); min-width: 220px;">
+    <div style="font-weight:700; margin-bottom:6px;">Human Modification Index</div>
+    <div style="font-weight:600; margin-bottom:4px;">Year</div>
+    <div style="margin-bottom:6px;">
+      <select id="mb-year-1" style="width:100%;">
+        <option value="1990-01-01">1990</option>
+        <option value="1995-01-01">1995</option>
+        <option value="2000-01-01">2000</option>
+        <option value="2005-01-01">2005</option>
+        <option value="2010-01-01">2010</option>
+        <option value="2015-01-01">2015</option>
+        <option value="2020-01-01">2020</option>
+        <option value="2025-01-01">2025</option>
+        <option value="2030-01-01">2030</option>
+        <option value="2035-01-01">2035</option>
+        <option value="2040-01-01">2040</option>
+      </select>
+    </div>
+    <div style="border-top: 1px solid #ddd; margin:6px 0;"></div>
+    <div style="font-weight:600; margin-bottom:4px;">Quantile</div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <label style="display:inline-flex; align-items:center; gap:6px;"><input type="radio" name="mb-param-1" id="mb1-param-upper" value="upper" checked> <span>upper</span></label>
+      <label style="display:inline-flex; align-items:center; gap:6px;"><input type="radio" name="mb-param-1" id="mb1-param-middle" value="middle"> <span>middle</span></label>
+      <label style="display:inline-flex; align-items:center; gap:6px;"><input type="radio" name="mb-param-1" id="mb1-param-lower" value="lower"> <span>lower</span></label>
+    </div>
+    <div style="margin-top:6px;">
+      <label style="display:flex; align-items:center; gap:8px;">
+        <span>Opacity</span>
+        <input type="range" id="mb-opacity-1" min="0" max="1" step="0.05" value="1">
+        <span id="mb-opacity-1-val">1.00</span>
+      </label>
+    </div>
+  </div>
+  <!-- Layer toggle controls: Panel 2 -->
+  <div id="mb-layer-controls-2" style="position:absolute; right:10px; top:170px; z-index:999; background:rgba(255,255,255,0.92); padding:8px 10px; border-radius:4px; font-size:14px; box-shadow:0 1px 4px rgba(0,0,0,0.2); min-width: 220px;">
+    <div style="font-weight:700; margin-bottom:6px;">Human Modification Index</div>
+    <div style="font-weight:600; margin-bottom:4px;">Year</div>
+    <div style="margin-bottom:6px;">
+      <select id="mb-year-2" style="width:100%;">
+        <option value="1990-01-01">1990</option>
+        <option value="1995-01-01">1995</option>
+        <option value="2000-01-01">2000</option>
+        <option value="2005-01-01">2005</option>
+        <option value="2010-01-01">2010</option>
+        <option value="2015-01-01">2015</option>
+        <option value="2020-01-01">2020</option>
+        <option value="2025-01-01">2025</option>
+        <option value="2030-01-01">2030</option>
+        <option value="2035-01-01">2035</option>
+        <option value="2040-01-01">2040</option>
+      </select>
+    </div>
+    <div style="border-top: 1px solid #ddd; margin:6px 0;"></div>
+    <div style="font-weight:600; margin-bottom:4px;">Quantile</div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <label style="display:inline-flex; align-items:center; gap:6px;"><input type="radio" name="mb-param-2" id="mb2-param-upper" value="upper" checked> <span>upper</span></label>
+      <label style="display:inline-flex; align-items:center; gap:6px;"><input type="radio" name="mb-param-2" id="mb2-param-middle" value="middle"> <span>middle</span></label>
+      <label style="display:inline-flex; align-items:center; gap:6px;"><input type="radio" name="mb-param-2" id="mb2-param-lower" value="lower"> <span>lower</span></label>
+    </div>
+    <div style="margin-top:6px;">
+      <label style="display:flex; align-items:center; gap:8px;">
+        <span>Opacity</span>
+        <input type="range" id="mb-opacity-2" min="0" max="1" step="0.05" value="0">
+        <span id="mb-opacity-2-val">0.00</span>
+      </label>
+    </div>
+  </div>
+  
+  <!-- Click coords readout -->
+  <div id="mb-coords" style="margin-top: 8px; font-size: 13px; color:#333;">
+    Click on the globe to see lon/lat here.
+  </div>
+  <div id="mb-edr" style="margin-top: 6px; font-size: 12px; color:#333; white-space: pre-wrap;"></div>
+  <!-- Air through time chart -->
+  <div id="air-chart-wrap" style="height: 220px; margin-top: 8px; background: #fff; border: 1px solid #eee; border-radius: 4px; padding: 6px;">
+    <canvas id="air-chart" height="200"></canvas>
+  </div>
+  
+</div>
+```
+
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.9.3/mapbox-gl.css" rel="stylesheet" />
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.9.3/mapbox-gl.js"></script>
+<!-- Chart.js + date adapter for time scale -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.umd.min.js"></script>
+<script>
+  let mbGlobeInited = false;
+  // Chart instance holder
+  let airChart = null;
+  function initMbGlobe() {
+    if (mbGlobeInited) return;
+    mbGlobeInited = true;
+
+    // Expect token set globally as window.MAPBOX_TOKEN; no hardcoded fallback
+    if (window.MAPBOX_TOKEN) {
+      mapboxgl.accessToken = window.MAPBOX_TOKEN;
+    } else {
+      console.warn('Mapbox token missing. Set MAPBOX_TOKEN env var before rendering the Mapbox globe slide.');
+    }
+
+    const map = new mapboxgl.Map({
+      container: 'mb-globe',
+      style: 'mapbox://styles/mapbox/satellite-v9',
+      zoom: 1,
+      center: [-74.5447, 40.6892],
+      attributionControl: true
+    });
+
+    // Show last-clicked lon/lat under the globe and drop/update a marker
+    const coordEl = document.getElementById('mb-coords');
+    function fmt(n) { return (Math.round(n * 10000) / 10000).toFixed(4); }
+    if (coordEl) {
+      map.on('click', (e) => {
+        const { lng, lat } = e.lngLat;
+        coordEl.textContent = `Lon: ${fmt(lng)}, Lat: ${fmt(lat)}`;
+        // Update click-point GeoJSON source if present
+        const src = map.getSource('click-point');
+        if (src) {
+          src.setData({
+            type: 'FeatureCollection',
+            features: [
+              {
+                type: 'Feature',
+                geometry: { type: 'Point', coordinates: [lng, lat] },
+                properties: {}
+              }
+            ]
+          });
+        }
+
+        // Fetch EDR for three quantiles and plot together
+        const edrEl = document.getElementById('mb-edr');
+        if (edrEl) {
+          // Show a lightweight spinner while fetching
+          if (!document.getElementById('edr-spinner-style')) {
+            const style = document.createElement('style');
+            style.id = 'edr-spinner-style';
+            style.textContent = `
+              .edr-spinner { display:inline-block; width:14px; height:14px; border:2px solid rgba(0,0,0,0.15); border-top-color: rgba(0,0,0,0.6); border-radius:50%; animation: edr-spin 0.8s linear infinite; vertical-align:middle; }
+              @keyframes edr-spin { to { transform: rotate(360deg); } }
+            `;
+            document.head.appendChild(style);
+          }
+          edrEl.innerHTML = '<span class="edr-spinner" aria-label="Loading" title="Loading"></span>';
+          const coordsWKT = `POINT(${lng} ${lat})`;
+          const makeUrl = (param) => `https://compute.earthmover.io/v1/services/edr/the-nature-conservancy/hm-multitemp/main/hm/edr/position?coords=${encodeURIComponent(coordsWKT)}&parameter-name=${param}`;
+          const paramsList = ['upper','middle','lower'];
+          Promise.all(paramsList.map(p => fetch(makeUrl(p)).then(r => r.json()).then(data => ({ p, data })).catch(err => ({ p, error: err }))))
+            .then(results => {
+              // Collect points per param within date window
+              const colors = { upper: '#e41a1c', middle: '#377eb8', lower: '#4daf4a' };
+              const series = { upper: [], middle: [], lower: [] };
+              const START_MS = Date.parse('1990-01-01');
+              const CUTOVER_MS = Date.parse('2020-01-01');
+              const END_MS = Date.parse('2040-01-01');
+              let firstText = '';
+              results.forEach(({ p, data, error }) => {
+                if (error || !data || !series[p]) return;
+                const dates = data?.domain?.axes?.date?.values || data?.domain?.axes?.t?.values || [];
+                const vals = data?.ranges?.[p]?.values || [];
+                if (Array.isArray(dates) && Array.isArray(vals) && dates.length && vals.length) {
+                  series[p] = dates
+                    .map((d, i) => ({ x: Date.parse(d), y: vals[i] }))
+                    .filter(pt => Number.isFinite(pt.x) && Number.isFinite(pt.y) && pt.x >= START_MS && pt.x <= END_MS);
+                  if (!firstText) firstText = `Date: ${dates[0]}  •  ${p}: ${vals[0]}`;
+                }
+              });
+              // Stop showing spinner regardless of whether data was found
+              edrEl.innerHTML = '';
+
+              // Build datasets: shaded 95% confidence (upper to lower), plus middle as observed/predicted
+              // Make the confidence band converge to a single point at the last observed year (CUTOVER_MS)
+              // using the middle series value at CUTOVER_MS, then expand from first forecast year (e.g., 2025).
+              const lastObservedMiddle = [...series.middle]
+                .filter(pt => pt.x <= CUTOVER_MS)
+                .sort((a,b) => a.x - b.x)
+                .slice(-1)[0];
+              const cutY = lastObservedMiddle ? lastObservedMiddle.y : null;
+              let lowerBand = series.lower.filter(pt => pt.x >= CUTOVER_MS);
+              let upperBand = series.upper.filter(pt => pt.x >= CUTOVER_MS);
+              if (cutY !== null) {
+                lowerBand = [{ x: CUTOVER_MS, y: cutY }, ...lowerBand];
+                upperBand = [{ x: CUTOVER_MS, y: cutY }, ...upperBand];
+              }
+              const lowerDs = {
+                label: '', // no label; hide from legend/tooltip
+                data: lowerBand,
+                borderColor: 'transparent',
+                backgroundColor: 'transparent',
+                pointRadius: 0,
+                borderWidth: 0,
+                tension: 0.2,
+                fill: false
+              };
+              const bandDs = {
+                label: '95% confidence',
+                data: upperBand,
+                borderColor: 'transparent',
+                backgroundColor: (colors.upper || '#e41a1c') + '33',
+                pointRadius: 0,
+                borderWidth: 0,
+                tension: 0.2,
+                fill: '-1' // fill to previous dataset (lower)
+              };
+              // Split middle into observed (<=2020-01-01) and predicted (>=2020-01-01)
+              let observed = series.middle.map(pt => (pt.x <= CUTOVER_MS ? pt : { x: pt.x, y: null }));
+              let predicted = series.middle.filter(pt => pt.x >= CUTOVER_MS);
+              // Add bridging point at CUTOVER_MS so lines meet without a gap
+              const prevPt = [...series.middle].filter(pt => pt.x <= CUTOVER_MS).sort((a,b) => a.x - b.x).slice(-1)[0];
+              const hasCutoverObserved = observed.some(pt => pt.x === CUTOVER_MS && pt.y !== null);
+              const hasCutoverPred = predicted.some(pt => pt.x === CUTOVER_MS);
+              if (prevPt) {
+                const bridge = { x: CUTOVER_MS, y: prevPt.y };
+                if (!hasCutoverObserved) observed = [...observed.filter(pt => pt.x < CUTOVER_MS), bridge, ...observed.filter(pt => pt.x > CUTOVER_MS)];
+                if (!hasCutoverPred) predicted = [bridge, ...predicted];
+              }
+              // Ensure arrays sorted by x and nulls removed from predicted
+              observed.sort((a,b) => a.x - b.x);
+              predicted.sort((a,b) => a.x - b.x);
+              const observedDs = {
+                label: 'observed',
+                data: observed,
+                borderColor: colors.middle,
+                backgroundColor: 'transparent',
+                pointRadius: 0,
+                borderWidth: 2,
+                borderDash: [],
+                tension: 0.2,
+                fill: false
+              };
+              const predictedDs = {
+                label: 'predicted',
+                data: predicted,
+                borderColor: colors.middle,
+                backgroundColor: 'transparent',
+                pointRadius: 0,
+                borderWidth: 2,
+                borderDash: [6, 4],
+                tension: 0.2,
+                fill: false
+              };
+              const datasets = [lowerDs, bandDs, observedDs, predictedDs];
+
+              // Build or update Chart.js
+              const ctx = document.getElementById('air-chart');
+              if (ctx && window.Chart) {
+                // Destroy any existing chart on this canvas before creating a new one
+                try {
+                  const existing = (window.Chart.getChart ? window.Chart.getChart(ctx) : window.airChart);
+                  if (existing) existing.destroy();
+                } catch (e) { console.warn('Chart destroy warning:', e); }
+
+                window.airChart = new Chart(ctx, {
+                  type: 'line',
+                  data: { datasets },
+                  options: {
+                    maintainAspectRatio: false,
+                    parsing: false,
+                    spanGaps: true,
+                    scales: {
+                      x: {
+                        type: 'linear',
+                        title: { display: true, text: 'Date' },
+                        min: START_MS,
+                        max: END_MS,
+                        ticks: {
+                          callback: (v) => { try { return new Date(v).toISOString().slice(0,16).replace('T',' '); } catch { return v; } },
+                          maxTicksLimit: 6
+                        }
+                      },
+                      y: { title: { display: true, text: 'Human Modification Index' } }
+                    },
+                    plugins: {
+                      legend: {
+                        display: true,
+                        labels: {
+                          filter: (item) => !!item.text
+                        }
+                      },
+                      tooltip: {
+                        callbacks: {
+                          label: (ctx) => {
+                            const label = ctx.dataset && typeof ctx.dataset.label === 'string' ? ctx.dataset.label : '';
+                            if (!label || label.startsWith('_')) return null; // hide helper/empty labels
+                            const x = ctx.parsed.x; const y = ctx.parsed.y;
+                            const ts = new Date(x).toISOString().slice(0,19).replace('T',' ');
+                            return ` ${label}: ${y}  •  ${ts}`;
+                          }
+                        }
+                      }
+                    }
+                  }
+                });
+              }
+            })
+            .catch(err => {
+              // Hide spinner and log error, but do not show UI text
+              edrEl.innerHTML = '';
+              console.error('EDR error:', err);
+            });
+        }
+      });
+    }
+
+    map.on('style.load', () => {
+      // Switch to globe projection
+      if (map.setProjection) {
+        map.setProjection('globe');
+      }
+
+      // Build WMS URL from PARAM and YEAR selections
+      const buildWmsUrl = (param, year) => {
+        const base = 'https://compute.earthmover.io/v1/services/wms/the-nature-conservancy/hm-multitemp/main/hm/wms?version=1.3.0&service=WMS&request=GetMap&layers=PARAM&styles=raster/default&colorscalerange=0,1&width=512&height=512&crs=EPSG:3857&date=YEAR&tile={x},{y},{z}';
+        return base.replace('PARAM', param).replace('YEAR', year);
+      };
+
+      // Insert below labels/buildings if present
+      const beforeId = map.getStyle().layers.find(l => ['building','road-label','poi-label','place-label'].includes(l.id))?.id;
+
+      // IDs for PARAM sources/layers
+      const params = ['lower','middle','upper']; // bottom-first for stacking
+      const srcId = (panel, p) => `wms-${panel}-${p}-src`;
+      const lyrId = (panel, p) => `wms-${panel}-${p}-layer`;
+
+      // Helper to (re)create a source+layer for a given panel, param and year
+      function upsertParam(panel, param, year, opacity) {
+        if (map.getLayer(lyrId(panel, param))) map.removeLayer(lyrId(panel, param));
+        if (map.getSource(srcId(panel, param))) map.removeSource(srcId(panel, param));
+        const url = buildWmsUrl(param, year);
+        console.log(`[WMS] panel=${panel} param=${param} year=${year} url=`, url);
+        map.addSource(srcId(panel, param), {
+          type: 'raster',
+          tiles: [ url ],
+          tileSize: 256
+        });
+        map.addLayer({
+          id: lyrId(panel, param),
+          type: 'raster',
+          source: srcId(panel, param),
+          paint: { 'raster-opacity': opacity }
+        }, beforeId);
+      }
+
+      // Initial creation for both panels based on current UI selections
+      const yearSel1 = document.getElementById('mb-year-1');
+      const yearSel2 = document.getElementById('mb-year-2');
+      const opacity1El = document.getElementById('mb-opacity-1');
+      const opacity2El = document.getElementById('mb-opacity-2');
+      const op1 = opacity1El ? parseFloat(opacity1El.value) : 1.0;
+      const op2 = opacity2El ? parseFloat(opacity2El.value) : 0.0;
+      const yearVal1 = yearSel1 ? yearSel1.value : '1990-01-01';
+      const yearVal2 = yearSel2 ? yearSel2.value : '1990-01-01';
+      params.forEach(p => upsertParam(1, p, yearVal1, op1));
+      params.forEach(p => upsertParam(2, p, yearVal2, op2));
+
+      // Wire up PARAM radios per panel to enforce single selection and toggle visibility
+      function setOnly(panel, param) {
+        params.forEach(p => {
+          const id = lyrId(panel, p);
+          if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', p === param ? 'visible' : 'none');
+        });
+      }
+      const paramRadios1 = Array.from(document.querySelectorAll('input[name="mb-param-1"]'));
+      const paramRadios2 = Array.from(document.querySelectorAll('input[name="mb-param-2"]'));
+      paramRadios1.forEach(r => r.addEventListener('change', () => setOnly(1, r.value)));
+      paramRadios2.forEach(r => r.addEventListener('change', () => setOnly(2, r.value)));
+      // Initial vis sync: show selected radio only per panel
+      const selRadio1 = (paramRadios1.find(r => r.checked) || { value: 'upper' }).value;
+      const selRadio2 = (paramRadios2.find(r => r.checked) || { value: 'upper' }).value;
+      setOnly(1, selRadio1);
+      setOnly(2, selRadio2);
+
+      // On Year change, recreate sources for that panel and reapply selection and opacity
+      if (yearSel1) {
+        yearSel1.addEventListener('change', () => {
+          const y = yearSel1.value;
+          const op = opacity1El ? parseFloat(opacity1El.value) : 1.0;
+          params.forEach(p => upsertParam(1, p, y, op));
+          const sr = (paramRadios1.find(r => r.checked) || { value: 'upper' }).value;
+          setOnly(1, sr);
+        });
+      }
+      if (yearSel2) {
+        yearSel2.addEventListener('change', () => {
+          const y = yearSel2.value;
+          const op = opacity2El ? parseFloat(opacity2El.value) : 0.0;
+          params.forEach(p => upsertParam(2, p, y, op));
+          const sr = (paramRadios2.find(r => r.checked) || { value: 'upper' }).value;
+          setOnly(2, sr);
+        });
+      }
+
+      // Opacity sliders wiring: update raster-opacity for all layers of that panel
+      function setOpacity(panel, value) {
+        params.forEach(p => {
+          const id = lyrId(panel, p);
+          if (map.getLayer(id)) map.setPaintProperty(id, 'raster-opacity', value);
+        });
+      }
+      const op1Val = document.getElementById('mb-opacity-1-val');
+      const op2Val = document.getElementById('mb-opacity-2-val');
+      if (opacity1El) {
+        opacity1El.addEventListener('input', () => {
+          const v = parseFloat(opacity1El.value);
+          if (op1Val) op1Val.textContent = v.toFixed(2);
+          setOpacity(1, v);
+        });
+      }
+      if (opacity2El) {
+        opacity2El.addEventListener('input', () => {
+          const v = parseFloat(opacity2El.value);
+          if (op2Val) op2Val.textContent = v.toFixed(2);
+          setOpacity(2, v);
+        });
+      }
+
+      // Global map error logging for easier debugging
+      map.on('error', (e) => {
+        console.error('[Mapbox error]', e && e.error ? e.error : e);
+      });
+
+      // Add empty GeoJSON source/layer for click marker (above WMS, below labels if possible)
+      if (!map.getSource('click-point')) {
+        map.addSource('click-point', {
+          type: 'geojson',
+          data: { type: 'FeatureCollection', features: [] }
+        });
+      }
+      if (!map.getLayer('click-point-layer')) {
+        map.addLayer({
+          id: 'click-point-layer',
+          type: 'circle',
+          source: 'click-point',
+          paint: {
+            'circle-radius': 6,
+            'circle-color': '#e74c3c',
+            'circle-stroke-color': '#ffffff',
+            'circle-stroke-width': 1.5
+          }
+        }, beforeId);
+      }
+
+      // Resize nudges
+      setTimeout(() => map.resize(), 200);
+      requestAnimationFrame(() => map.resize());
+    });
+  }
+
+  function maybeInitMbGlobeOnCurrentSlide() {
+    const current = window.Reveal && Reveal.getCurrentSlide ? Reveal.getCurrentSlide() : null;
+    if (current && current.querySelector('#mb-globe')) {
+      initMbGlobe();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.Reveal) {
+      Reveal.on('ready', maybeInitMbGlobeOnCurrentSlide);
+      Reveal.on('slidechanged', maybeInitMbGlobeOnCurrentSlide);
+    } else {
+      initMbGlobe();
+    }
+  });
+</script>
+
+---
+
+## Mapbox map
+
+<div style="display:flex; gap:12px; align-items:center; margin-bottom:8px;">
+  <button id="rect-btn">Draw Rectangle</button>
+  <div>BBox: <code id="rect-bbox">(draw to see bbox)</code></div>
+  <div style="flex:1"></div>
+  <small>Tip: Click "Draw Rectangle" then click-drag on the map.</small>
+</div>
+<div id="mb-basic-map" style="width:100%; height:540px; border:1px solid #ddd;"></div>
+
+<script>
+  // Minimal, inline init (no Reveal hooks)
+  (function() {
+    if (!window.mapboxgl) { console.error('mapboxgl not loaded'); return; }
+    if (typeof mapboxgl.setTelemetry === 'function') {
+      try { mapboxgl.setTelemetry(false); } catch {}
+    }
+    // Use global token or fallback to the one already set
+    mapboxgl.accessToken = (window.MAPBOX_TOKEN || mapboxgl.accessToken || '');
+    const map = new mapboxgl.Map({
+      container: 'mb-basic-map',
+      style: 'mapbox://styles/mapbox/light-v11',
+      projection: 'mercator'
+    });
+    // Ensure proper sizing when the slide becomes visible
+    const doResize = () => { try { map.resize(); } catch {} };
+    window.addEventListener('resize', doResize);
+    if (window.Reveal) {
+      Reveal.on('ready', doResize);
+      Reveal.on('slidechanged', () => {
+        const el = document.getElementById('mb-basic-map');
+        const vis = el && el.closest('section') && el.closest('section').classList.contains('present');
+        if (vis) doResize();
+      });
+    }
+    map.on('load', () => {
+      // multiple passes to handle layout transitions
+      doResize();
+      requestAnimationFrame(doResize);
+      setTimeout(doResize, 200);
+      // Zoom to Africa after sizing
+      map.fitBounds([
+        [-20.0, -35.0], // SW
+        [55.0, 38.0]    // NE
+      ], { padding: 20, duration: 0 });
+
+      // Lightweight rectangle draw (no external libs)
+      const bboxEl = document.getElementById('rect-bbox');
+      const btn = document.getElementById('rect-btn');
+      let drawing = false;
+      let startLngLat = null;
+      const SRC_ID = 'rect-src';
+      const FILL_ID = 'rect-fill';
+      const LINE_ID = 'rect-line';
+
+      function ensureLayers() {
+        if (!map.getSource(SRC_ID)) {
+          map.addSource(SRC_ID, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+        }
+        if (!map.getLayer(FILL_ID)) {
+          map.addLayer({
+            id: FILL_ID,
+            type: 'fill',
+            source: SRC_ID,
+            paint: { 'fill-color': '#3b82f6', 'fill-opacity': 0.15 }
+          });
+        }
+        if (!map.getLayer(LINE_ID)) {
+          map.addLayer({
+            id: LINE_ID,
+            type: 'line',
+            source: SRC_ID,
+            paint: { 'line-color': '#1d4ed8', 'line-width': 2 }
+          });
+        }
+      }
+
+      function updatePolygonFromBounds(sw, ne) {
+        const west = Math.min(sw.lng, ne.lng);
+        const south = Math.min(sw.lat, ne.lat);
+        const east = Math.max(sw.lng, ne.lng);
+        const north = Math.max(sw.lat, ne.lat);
+        const poly = {
+          type: 'Feature',
+          geometry: {
+            type: 'Polygon',
+            coordinates: [[
+              [west, south], [east, south], [east, north], [west, north], [west, south]
+            ]]
+          },
+          properties: {}
+        };
+        const src = map.getSource(SRC_ID);
+        if (src) {
+          src.setData({ type: 'FeatureCollection', features: [poly] });
+        }
+        if (bboxEl) {
+          bboxEl.textContent = `${west.toFixed(6)}, ${south.toFixed(6)}, ${east.toFixed(6)}, ${north.toFixed(6)}`;
+        }
+      }
+
+      function clearRect() {
+        const src = map.getSource(SRC_ID);
+        if (src) src.setData({ type: 'FeatureCollection', features: [] });
+        if (bboxEl) bboxEl.textContent = '(draw to see bbox)';
+      }
+
+      const onMove = (e) => {
+        if (!drawing || !startLngLat) return;
+        ensureLayers();
+        updatePolygonFromBounds(startLngLat, e.lngLat);
+      };
+      const onUp = (e) => {
+        map.getCanvas().style.cursor = '';
+        map.off('mousemove', onMove);
+        map.off('mouseup', onUp);
+        map.dragPan.enable();
+        map.doubleClickZoom.enable();
+        drawing = false;
+        if (startLngLat) updatePolygonFromBounds(startLngLat, e.lngLat);
+      };
+
+      if (btn) {
+        btn.addEventListener('click', () => {
+          clearRect();
+          drawing = true;
+          startLngLat = null;
+          map.getCanvas().style.cursor = 'crosshair';
+          map.dragPan.disable();
+          map.doubleClickZoom.disable();
+          // wait for first mousedown on map to set start
+          const onDown = (e) => {
+            startLngLat = e.lngLat;
+            map.on('mousemove', onMove);
+            map.on('mouseup', onUp);
+            map.off('mousedown', onDown);
+          };
+          map.on('mousedown', onDown);
+        });
+      }
+    });
+  })();
+</script>
+
+---
+
+## Thanks!
