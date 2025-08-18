@@ -18,7 +18,8 @@ jobs:
       - name: Setup Quarto
         uses: quarto-dev/quarto-actions/setup@v2
         with:
-          version: latest
+          # Pin to latest stable
+          version: 1.8.20
 
       # If you need Python or Node locally for filters/extensions, uncomment:
       # - name: Setup Python
@@ -26,20 +27,17 @@ jobs:
       #   with:
       #     python-version: '3.11'
 
-      - name: Render slides
+      - name: Render slides to _site
         env:
           MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
         run: |
           quarto --version
-          quarto render slides.qmd
+          quarto render slides.qmd --output-dir _site
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .
+          publish_dir: ./_site
           publish_branch: gh-pages
           force_orphan: true
-          # Only publish the built site files if you prefer:
-          # publish_dir: ./
-          # (index.html and slides_files will be present after render)
