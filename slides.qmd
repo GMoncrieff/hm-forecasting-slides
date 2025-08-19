@@ -27,7 +27,7 @@ output-file: index.html
 Forecasts of human impacts help us anticipate where and when pressures on ecosystems are likely to intensify, allowing proactive rather than reactive action. By linking projected changes to planning, they guide decisions on where to prioritize protection, restoration, or policy interventions for the greatest long-term benefit.
 
 ![Impact](/images/impact1.png) <br>
-But forecasting human impacts is not easy. THere is a trade-off between the level of detail in the forecast and the uncertainty/accuracy of the forecast.
+But forecasting human impacts is not easy. There is a trade-off between the level of detail in the forecast and the uncertainty/accuracy of the forecast.
 <br>
 e.g.<br><br>
 
@@ -47,7 +47,7 @@ _The global average temperature in 2030_<br><br>
 
 ## Our approach
 <div style="font-size:0.5em">
-We use a multi-horizon forecast approach to forecast human modification at 1km resolution for the period 2020-2040. We use a range of covariates to predict human modification, including population, economic development, and infrastructure development. THe multi-horizon approach allows us to forecast human modification at different time horizons, from short-term (5 year) to long-term (20 year). </div>
+We use a multi-horizon forecast approach to forecast human modification at 1km resolution for the period 2020-2040. We use a range of covariates to predict human modification, including population, economic development, and infrastructure development. The multi-horizon approach allows us to forecast human modification at different time horizons, from short-term (5 year) to long-term (20 year). </div>
 <br>
 ![](/images/hm_model2.gif){style="width:300%"}
 
@@ -87,14 +87,14 @@ We use a multi-horizon forecast approach to forecast human modification at 1km r
 
 ## Model performance
 <div style="font-size:0.5em">
-Comparing the fitted models against baseline assumptions - I nthe absence of a model we might assume either the status quo (zero change) or a linear trend. How does our model compare to these baselines over different horizons?
+Comparing the fitted models against baseline assumptions - In the absence of a model we might assume either the status quo (zero change) or a linear trend. How does our model compare to these baselines over different horizons?
  ![](/images/horizon.png)
 
  Assuming that 5 years time will be the same as now is a hard baseline to beat, but as we go further into the future the model becomes better. It is never a great idea to assume that the change we last observed will continue in the future. 
 
  <br><br>
  How well can we predict HM in 20 years time?  <br><br> ![](/images/abs_err.png)  <br><br>Very well!  <br><br>
- But remember, just assuming it wont change works pretty well so predicting the absolute value is not that hard
+ But remember, just assuming it wont change works pretty well, so predicting the absolute value is not that hard
  <br><br>
   How well can we predict how much HM will change in 20 years time?  <br><br> ![](/images/diff_err.png)  <br><br> It is hard, but we get the overall direction and magnitude right
  <br><br>
@@ -102,13 +102,13 @@ Comparing the fitted models against baseline assumptions - I nthe absence of a m
 
 ## Change through time: Observed vs predicted
 <div style="font-size:0.5em">
-What do individual pixels look like? We see some in which it is quite vertain they will remain intact and not change, some where we suspect that might become less intact, and some where we are very uncertain. Incldsing uncertainty captures the range of possible outcomes and helps us understand the risk of different scenarios.
+What do individual pixels look like? We see some in which it is quite certain they will remain intact and not change, some we suspect might become less intact, and some where we are very uncertain. Including uncertainty captures the range of possible outcomes and helps us understand the risk of different scenarios.
 
  <br><br>
 ![](/images/timeseries.png)
   <br><br>
 
- We might not alway get the mean prediction correct - this is a very hard problem to predict. But we can get well calibrated ranges so that we are 95% certain the true outcome will lie within these bounds. 
+ We might not always get the mean prediction correct - this is a very hard problem to predict. But we can get well calibrated ranges so that we are 95% certain the true outcome will lie within these bounds. 
 </div>
 
 ## Map of predicted change
@@ -123,7 +123,7 @@ Difference between upper and lower bounds of predicted change 2030 - Yucatan Pen
 
 ## Model insights
 <div style="font-size:0.7em">
-What is driving the change? We can poke the model to find out whoch covariates are most important overall and for individual pixels. 
+What is driving the change? We can poke the model to find out which covariates are most important overall and for individual pixels. 
 
 <br><br>
 ![](/images/importance.png)<br><br>
@@ -1035,6 +1035,106 @@ more work to come here
       Reveal.on('slidechanged', maybeInitMlPm2OnCurrentSlide);
     } else {
       initMlPmGlobe2();
+    }
+  });
+</script>
+
+---
+
+## HM increase 2020-2040
+
+```{=html}
+<style>
+  /* Simple layout without legend */
+  .ml3-wrap { position: relative; }
+  .ml3-ctrl { position:absolute; right:10px; top:10px; z-index:1000; background:rgba(255,255,255,0.94); padding:8px 10px; border-radius:4px; font-size:13px; box-shadow:0 1px 4px rgba(0,0,0,0.2); display:flex; align-items:center; gap:8px; }
+  .ml3-ctrl input[type="range"] { width:120px; }
+  @media (max-width: 720px) { .ml3-ctrl { font-size:12px; } }
+  </style>
+<div class="ml3-wrap">
+  <div id="ml-pmtiles-globe-3" style="height: 460px; margin-top: 0.5rem;"></div>
+  <div class="ml3-ctrl" aria-label="Opacity control">
+    <span>Opacity</span>
+    <input id="ml3-opacity" type="range" min="0" max="1" step="0.05" value="0.95" />
+    <span id="ml3-opacity-val">0.95</span>
+  </div>
+</div>
+```
+
+<script>
+  let mlPm3Inited = false;
+  function initMlPmGlobe3() {
+    if (mlPm3Inited) return;
+    mlPm3Inited = true;
+    if (!window.maplibregl || !window.pmtiles) {
+      console.error('MapLibre GL or PMTiles not loaded');
+      return;
+    }
+    // Register pmtiles protocol (ignore if already registered)
+    try {
+      const protocol3 = new pmtiles.Protocol();
+      if (typeof maplibregl.addProtocol === 'function') {
+        try { maplibregl.addProtocol('pmtiles', protocol3.tile); } catch (_) {}
+      }
+    } catch (_) {}
+
+    const blankStyle = { version: 8, sources: {}, layers: [], name: 'blank' };
+    const map3 = new maplibregl.Map({
+      container: 'ml-pmtiles-globe-3',
+      style: blankStyle,
+      center: [18.48, -33.8518],
+      zoom: 2,
+      attributionControl: true
+    });
+
+    map3.on('style.load', () => {
+      try { map3.setProjection({ type: 'globe' }); } catch (e) { console.warn('Globe projection not available:', e); }
+      // Esri basemap
+      const esriSrcId = 'esri-world-3';
+      const esriLayerId = 'esri-world-3';
+      map3.addSource(esriSrcId, {
+        type: 'raster',
+        tiles: ['https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+        tileSize: 256,
+        attribution: 'Esri, Maxar, Earthstar Geographics, and the GIS User Community'
+      });
+      map3.addLayer({ id: esriLayerId, type: 'raster', source: esriSrcId });
+
+      // PMTiles: duplo layer
+      const pmtilesUrl = 'https://pub-6b6a1d5b041c4c749efaeb294cda9aac.r2.dev/duplo_katie.pmtiles';
+      const srcId = 'pmtiles-low2040-3';
+      const layerId = 'pmtiles-low2040-3';
+      map3.addSource(srcId, { type: 'raster', tiles: [`pmtiles://${pmtilesUrl}/{z}/{x}/{y}`], tileSize: 512 });
+      map3.addLayer({ id: layerId, type: 'raster', source: srcId, paint: { 'raster-opacity': 0.95 } });
+
+      // Opacity slider wiring
+      const op = document.getElementById('ml3-opacity');
+      const opVal = document.getElementById('ml3-opacity-val');
+      if (op) {
+        const setOp = (v) => { try { map3.setPaintProperty(layerId, 'raster-opacity', v); if (opVal) opVal.textContent = (+v).toFixed(2); } catch(e) {} };
+        setOp(parseFloat(op.value || '0.95'));
+        op.addEventListener('input', () => setOp(parseFloat(op.value)));
+      }
+
+      // Resize nudges
+      setTimeout(() => map3.resize(), 200);
+      requestAnimationFrame(() => map3.resize());
+    });
+  }
+
+  function maybeInitMlPm3OnCurrentSlide() {
+    const current = window.Reveal && Reveal.getCurrentSlide ? Reveal.getCurrentSlide() : null;
+    if (current && current.querySelector('#ml-pmtiles-globe-3')) {
+      initMlPmGlobe3();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.Reveal) {
+      Reveal.on('ready', maybeInitMlPm3OnCurrentSlide);
+      Reveal.on('slidechanged', maybeInitMlPm3OnCurrentSlide);
+    } else {
+      initMlPmGlobe3();
     }
   });
 </script>
