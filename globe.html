@@ -1,139 +1,5 @@
----
-title: "Nature in 2040"
-subtitle: "Forecasting Human Modification of Global Lands from 2020 to 2040"
-author: "Glenn Moncrieff, Maria Voigt, Christina Kennedy - Global Science TNC <br> Jim Oakleaf, Joe Kiesecker - Global Protect TNC"
-date: "2025-08-19"
-format:
-  revealjs:
-    theme: simple
-    slide-number: true
-    # ↓↓↓ add these two lines
-    scrollable: true     # allow the page itself to scroll
-    center: false        # start content at the top, not vertically centred
-    include-in-header: header.html
-output-file: index.html
----
+## Globe (Mapbox + WMS)
 
-## Global Human Modification
-
-<div style="font-size:0.5em">
- The Global Human Modification (HM) index [Theobald et al 2024](https://www.nature.com/articles/s41597-025-04892-2) measures the impact of human activites on nature by quantifying the distribution and intesnity of 14 threats globally. It ranges from 0 (no human impact) to 1 (maximum human impact). These 14 threats are summarized into a single cumulative index representing the overall impact of human activities on nature. A time series of this index is available from 1990 to 2020 every 5 years at 300m resolution for both the individual threats and the cumulative index. 
-
-[![](/images/hm1.png)](https://www.nature.com/articles/s41597-025-04892-2)
-</div>
-
-## Forecasting HM
-<div style="font-size:0.5em">
-Forecasts of human impacts help us anticipate where and when pressures on ecosystems are likely to intensify, allowing proactive rather than reactive action. By linking projected changes to planning, they guide decisions on where to prioritize protection, restoration, or policy interventions for the greatest long-term benefit.
-
-![Impact](/images/impact1.png) <br>
-But forecasting human impacts is not easy. THere is a trade-off between the level of detail in the forecast and the uncertainty/accuracy of the forecast.
-<br>
-e.g.<br><br>
-
-
-**High detail - actionable but hard to predict**<br>
-Will a specifc 300m pixel be converted to housing between 2095 and 2100?<br>
-_How much will it rain in my neighbourhood park on the 3rd Monday in July in 2028_<br><br>
-
-**Medium detail - informataive and somewhat predictable**<br>
-Overall change in human pressue at 1km resolution between 2020 and 2040<br>
-_Likelihood the maximum monthly temp in July 2050 in Denver will exceed 90F /32C in 2050_<br><br>
-
-**Low detail -less useful but more predictable**<br>
-Overall pressue at Country scale in 2030<br>
-_The global average temperature in 2030_<br><br>
-</div>
-
-## Our approach
-<div style="font-size:0.5em">
-We use a multi-horizon forecast approach to forecast human modification at 1km resolution for the period 2020-2040. We use a range of covariates to predict human modification, including population, economic development, and infrastructure development. THe multi-horizon approach allows us to forecast human modification at different time horizons, from short-term (5 year) to long-term (20 year). </div>
-<br>
-![](/images/hm_model2.gif){style="width:300%"}
-
-## Model covariates
-<div style="font-size:0.5em">
-
-- **Topography**  
-  Elevation, Slope, Aspect, Topographic Position Index
-
-- **Climate**  
-  Temperature, Precipitation
-
-- **Population**  
-  Population density at 1km resolution from 1990 to 2040
-
-- **NPP**  
-  Potential under historical climate
-
-- **GDP**  
-  GDP at 1km resolution from 1990 to 2040
-
-- **Protected areas**  
-  Encoded at 0/1
-
-- **Development Pressure**  
-  Development Suitabilty Index ranks development suitability scores from 0 (lowest) to 1 (highest) based on the average score across all development potential indices (DPIs) multiplied by the maximum score 
-  ![](/images/dsi.png) [Oakleaf et al 2024](https://www.nature.com/articles/s41597-024-03639-9) 
-
-- **Location**  
-  Encodes the influence of location (unaccounted for by covarites) on human modification change. 
-    ![](/images/location.png) [Russwurm et al 2024](https://arxiv.org/abs/2310.06743) 
-
-- **Neighborhood**  
-  Average past HM and past HM change with a 6km and  120km radius using uber h3 spatial index
- ![](/images/h3.png)
-</div>
-
-## Model performance
-<div style="font-size:0.5em">
-Comparing the fitted models against baseline assumptions - I nthe absence of a model we might assume either the status quo (zero change) or a linear trend. How does our model compare to these baselines over different horizons?
- ![](/images/horizon.png)
-
- Assuming that 5 years time will be the same as now is a hard baseline to beat, but as we go further into the future the model becomes better. It is never a great idea to assume that the change we last observed will continue in the future. 
-
- <br><br>
- How well can we predict HM in 20 years time?  <br><br> ![](/images/abs_err.png)  <br><br>Very well!  <br><br>
- But remember, just assuming it wont change works pretty well so predicting the absolute value is not that hard
- <br><br>
-  How well can we predict how much HM will change in 20 years time?  <br><br> ![](/images/diff_err.png)  <br><br> It is hard, but we get the overall direction and magnitude right
- <br><br>
-</div>
-
-## Change through time: Observed vs predicted
-<div style="font-size:0.5em">
-What do individual pixels look like? We see some in which it is quite vertain they will remain intact and not change, some where we suspect that might become less intact, and some where we are very uncertain. Incldsing uncertainty captures the range of possible outcomes and helps us understand the risk of different scenarios.
-
- <br><br>
-![](/images/timeseries.png)
-  <br><br>
-
- We might not alway get the mean prediction correct - this is a very hard problem to predict. But we can get well calibrated ranges so that we are 95% certain the true outcome will lie within these bounds. 
-</div>
-
-## Map of predicted change
-<div style="font-size:0.7em">
-Timeseries of observed change in overall HM 1990-2020 and predicted change 2020-2050 - Yucatan Peninsula
-![](/images/1_fullts.gif)
-
-Difference between upper and lower bounds of predicted change 2030 - Yucatan Peninsula
-![](/images/2_uncer.gif)
-
-</div>
-
-## Model insights
-<div style="font-size:0.7em">
-What is driving the change? We can poke the model to find out whoch covariates are most important overall and for individual pixels. 
-
-<br><br>
-![](/images/importance.png)<br><br>
-![](/images/variable_importance.png)
-<br><br>
-
-more work to come here
-</div>
-
-## Globe (Mapbox + WMS) {data-visibility="hidden"}
 
 ```{=html}
 <link href="https://api.mapbox.com/mapbox-gl-js/v3.9.3/mapbox-gl.css" rel="stylesheet" />
@@ -605,9 +471,10 @@ more work to come here
     }
   });
 </script>
+-->
 
 
-## Human modification forecast {.scrollable}
+## Globe (MapLibre + PMTiles) {.scrollable}
 
 ```{=html}
 <link href="https://unpkg.com/maplibre-gl@5.0.0/dist/maplibre-gl.css" rel="stylesheet" />
@@ -627,14 +494,11 @@ more work to come here
 </style>
 <div class="ml-controls">
   <div class="ml-panel">
-    <div class="ml-panel-title">Top layer</div>
+    <div class="ml-panel-title">Layer A</div>
     <label for="pm-layer-select-1">Source:</label>
     <select id="pm-layer-select-1">
-      <option value="obs1990" selected>Observed 1990</option>
-      <option value="obs2020">Observed 2020</option>
-      <option value="mean2040">Mean 2040</option>
-      <option value="upper2040">Upper 2040</option>
-      <option value="lower2040">Lower 2040</option>
+      <option value="old" selected>old</option>
+      <option value="new">new</option>
     </select>
     <div class="ml-slider">
       <span>Opacity</span>
@@ -643,14 +507,11 @@ more work to come here
     </div>
   </div>
   <div class="ml-panel">
-    <div class="ml-panel-title">Bottom layer</div>
+    <div class="ml-panel-title">Layer B</div>
     <label for="pm-layer-select-2">Source:</label>
     <select id="pm-layer-select-2">
-      <option value="obs1990">Observed 1990</option>
-      <option value="obs2020">Observed 2020</option>
-      <option value="mean2040" selected>Mean 2040</option>
-      <option value="upper2040">Upper 2040</option>
-      <option value="lower2040">Lower 2040</option>
+      <option value="old">old</option>
+      <option value="new" selected>new</option>
     </select>
     <div class="ml-slider">
       <span>Opacity</span>
@@ -658,6 +519,7 @@ more work to come here
       <span id="pm-opacity-2-val">0.00</span>
     </div>
     <div class="ml-spacer"></div>
+    <small>PMTiles from provided URL; both selectors reference the same dataset family.</small>
   </div>
 </div>
 <div id="ml-pmtiles-globe" style="height: 420px; margin-top: 0.5rem;"></div>
@@ -718,52 +580,45 @@ more work to come here
         map.addLayer({ id: esriLayerId, type: 'raster', source: esriSrcId });
       }
 
-      // PMTiles datasets
-      const PM_SOURCES = {
-        obs1990: 'https://pub-6b6a1d5b041c4c749efaeb294cda9aac.r2.dev/obs1990_katie.pmtiles',
-        obs2020: 'https://pub-6b6a1d5b041c4c749efaeb294cda9aac.r2.dev/obs2020_katie.pmtiles',
-        mean2040: 'https://pub-6b6a1d5b041c4c749efaeb294cda9aac.r2.dev/mid2040_katie.pmtiles',
-        upper2040: 'https://pub-6b6a1d5b041c4c749efaeb294cda9aac.r2.dev/upp2040_katie.pmtiles',
-        lower2040: 'https://pub-6b6a1d5b041c4c749efaeb294cda9aac.r2.dev/low2040_katie.pmtiles'
+      // PMTiles raster sources: old and new
+      const pmtilesOld = 'https://pub-6b6a1d5b041c4c749efaeb294cda9aac.r2.dev/land_z0-8.pmtiles';
+      const pmtilesNew = 'https://pub-6b6a1d5b041c4c749efaeb294cda9aac.r2.dev/land_z0-7.pmtiles';
+      const srcOldId = 'pmtiles-old';
+      const srcNewId = 'pmtiles-new';
+      if (!map.getSource(srcOldId)) {
+        map.addSource(srcOldId, { type: 'raster', tiles: [`pmtiles://${pmtilesOld}/{z}/{x}/{y}`], tileSize: 512 });
+      }
+      if (!map.getSource(srcNewId)) {
+        map.addSource(srcNewId, { type: 'raster', tiles: [`pmtiles://${pmtilesNew}/{z}/{x}/{y}`], tileSize: 512 });
+      }
+      // Create four layers (two panels x two sources)
+      const LYR = {
+        1: { old: 'pm1-old', new: 'pm1-new' },
+        2: { old: 'pm2-old', new: 'pm2-new' }
       };
-      const KEYS = Object.keys(PM_SOURCES);
-      // Add sources for each dataset
-      KEYS.forEach((k) => {
-        const url = PM_SOURCES[k];
-        if (!url) return; // skip missing
-        const srcId = `pm-src-${k}`;
-        if (!map.getSource(srcId)) {
-          map.addSource(srcId, { type: 'raster', tiles: [`pmtiles://${url}/{z}/{x}/{y}`], tileSize: 512 });
-        }
-      });
-      // Create per-panel layers for each dataset
-      const LYR = { 1: {}, 2: {} };
-      const ensureLayer = (panel, key) => {
-        const srcId = `pm-src-${key}`;
-        if (!PM_SOURCES[key]) return; // no source
-        const id = `pm${panel}-${key}`;
-        LYR[panel][key] = id;
+      const ensureLayer = (id, source) => {
         if (!map.getLayer(id)) {
-          map.addLayer({ id, type: 'raster', source: srcId, paint: { 'raster-opacity': 1.0 } });
-          map.setLayoutProperty(id, 'visibility', 'none');
+          map.addLayer({ id, type: 'raster', source, paint: { 'raster-opacity': 1.0 } });
         }
       };
-      KEYS.forEach((k) => { ensureLayer(1, k); ensureLayer(2, k); });
+      ensureLayer(LYR[1].old, srcOldId);
+      ensureLayer(LYR[1].new, srcNewId);
+      ensureLayer(LYR[2].old, srcOldId);
+      ensureLayer(LYR[2].new, srcNewId);
 
       // Helpers to apply selection/opacity per panel
-      function applySelection(panel, key) {
-        KEYS.forEach((k) => {
-          const id = LYR[panel][k];
-          if (!id) return;
-          try { map.setLayoutProperty(id, 'visibility', k === key ? 'visible' : 'none'); } catch (e) {}
-        });
+      function applySelection(panel, value) {
+        const showOld = value === 'old';
+        try {
+          map.setLayoutProperty(LYR[panel].old, 'visibility', showOld ? 'visible' : 'none');
+          map.setLayoutProperty(LYR[panel].new, 'visibility', showOld ? 'none' : 'visible');
+        } catch (e) { console.warn('Layer toggle error', e); }
       }
       function applyOpacity(panel, value) {
-        KEYS.forEach((k) => {
-          const id = LYR[panel][k];
-          if (!id) return;
-          try { map.setPaintProperty(id, 'raster-opacity', value); } catch (e) {}
-        });
+        try {
+          map.setPaintProperty(LYR[panel].old, 'raster-opacity', value);
+          map.setPaintProperty(LYR[panel].new, 'raster-opacity', value);
+        } catch (e) { console.warn('Opacity set error', e); }
       }
 
       // Wire UI controls
@@ -774,9 +629,9 @@ more work to come here
       const op1Val = document.getElementById('pm-opacity-1-val');
       const op2Val = document.getElementById('pm-opacity-2-val');
 
-      // Initial state: Top per selection, Bottom per selection
-      applySelection(1, sel1 ? sel1.value : 'obs1990');
-      applySelection(2, sel2 ? sel2.value : 'mean2040');
+      // Initial state: A old @ 1.00, B new @ 0.00
+      applySelection(1, sel1 ? sel1.value : 'old');
+      applySelection(2, sel2 ? sel2.value : 'new');
       const initOp1 = op1 ? parseFloat(op1.value) : 1.0;
       const initOp2 = op2 ? parseFloat(op2.value) : 0.0;
       applyOpacity(1, initOp1);
@@ -931,129 +786,3 @@ more work to come here
 </script>
 
 ---
-
-## Change in extent of intact lands
-
-```{=html}
-<style>
-  /* Scoped styles for 2nd MapLibre legend (Inferno categories) */
-  .ml2-map-wrap { position: relative; }
-  .ml2-legend { position:absolute; right:10px; top:10px; z-index:1000; background:rgba(255,255,255,0.94); padding:8px 10px; border-radius:4px; font-size:13px; box-shadow:0 1px 4px rgba(0,0,0,0.2); }
-  .ml2-legend-item { display:flex; align-items:center; gap:8px; margin:4px 0; }
-  .ml2-swatch { width:14px; height:14px; border:1px solid rgba(0,0,0,0.4); border-radius:2px; }
-  .ml2-ctrl { margin-top:6px; font-size:12px; display:flex; align-items:center; gap:8px; }
-  .ml2-ctrl input[type="range"] { width:120px; }
-  @media (max-width: 720px) { .ml2-legend { font-size:12px; } }
-</style>
-<div class="ml2-map-wrap">
-  <div id="ml-pmtiles-globe-2" style="height: 460px; margin-top: 0.5rem;"></div>
-  <div class="ml2-legend" aria-label="Map legend">
-    <div class="ml2-legend-item"><span class="ml2-swatch" style="background:#3b0f70;"></span><span>intact</span></div>
-    <div class="ml2-legend-item"><span class="ml2-swatch" style="background:#9c179e;"></span><span>converted 97.5%</span></div>
-    <div class="ml2-legend-item"><span class="ml2-swatch" style="background:#f98e09;"></span><span>converted 50%</span></div>
-    <div class="ml2-legend-item"><span class="ml2-swatch" style="background:#fcffa4;"></span><span>converted 2.5%</span></div>
-    <div class="ml2-ctrl">
-      <span>Opacity</span>
-      <input id="ml2-opacity" type="range" min="0" max="1" step="0.05" value="0.95" />
-      <span id="ml2-opacity-val">0.95</span>
-    </div>
-  </div>
-</div>
-```
-
-<script>
-  let mlPm2Inited = false;
-  function initMlPmGlobe2() {
-    if (mlPm2Inited) return;
-    mlPm2Inited = true;
-    if (!window.maplibregl || !window.pmtiles) {
-      console.error('MapLibre GL or PMTiles not loaded');
-      return;
-    }
-    // Register pmtiles protocol (ignore if already registered)
-    try {
-      const protocol2 = new pmtiles.Protocol();
-      if (typeof maplibregl.addProtocol === 'function') {
-        try { maplibregl.addProtocol('pmtiles', protocol2.tile); } catch (_) {}
-      }
-    } catch (_) {}
-
-    const blankStyle = { version: 8, sources: {}, layers: [], name: 'blank' };
-    const map2 = new maplibregl.Map({
-      container: 'ml-pmtiles-globe-2',
-      style: blankStyle,
-      center: [18.48, -33.8518],
-      zoom: 2,
-      attributionControl: true
-    });
-
-    map2.on('style.load', () => {
-      try { map2.setProjection({ type: 'globe' }); } catch (e) { console.warn('Globe projection not available:', e); }
-      // Esri basemap
-      const esriSrcId = 'esri-world-2';
-      const esriLayerId = 'esri-world-2';
-      map2.addSource(esriSrcId, {
-        type: 'raster',
-        tiles: ['https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
-        tileSize: 256,
-        attribution: 'Esri, Maxar, Earthstar Geographics, and the GIS User Community'
-      });
-      map2.addLayer({ id: esriLayerId, type: 'raster', source: esriSrcId });
-
-      // PMTiles: show 'new' only
-      const pmtilesNew = 'https://pub-6b6a1d5b041c4c749efaeb294cda9aac.r2.dev/land_z0-7.pmtiles';
-      const srcNewId = 'pmtiles-new-2';
-      const layerNewId = 'pmtiles-new-2';
-      map2.addSource(srcNewId, { type: 'raster', tiles: [`pmtiles://${pmtilesNew}/{z}/{x}/{y}`], tileSize: 512 });
-      map2.addLayer({ id: layerNewId, type: 'raster', source: srcNewId, paint: { 'raster-opacity': 0.95 } });
-
-      // Opacity slider wiring
-      const op = document.getElementById('ml2-opacity');
-      const opVal = document.getElementById('ml2-opacity-val');
-      if (op) {
-        const setOp = (v) => { try { map2.setPaintProperty(layerNewId, 'raster-opacity', v); if (opVal) opVal.textContent = (+v).toFixed(2); } catch(e) {} };
-        setOp(parseFloat(op.value || '0.95'));
-        op.addEventListener('input', () => setOp(parseFloat(op.value)));
-      }
-
-      // Resize nudges
-      setTimeout(() => map2.resize(), 200);
-      requestAnimationFrame(() => map2.resize());
-    });
-  }
-
-  function maybeInitMlPm2OnCurrentSlide() {
-    const current = window.Reveal && Reveal.getCurrentSlide ? Reveal.getCurrentSlide() : null;
-    if (current && current.querySelector('#ml-pmtiles-globe-2')) {
-      initMlPmGlobe2();
-    }
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    if (window.Reveal) {
-      Reveal.on('ready', maybeInitMlPm2OnCurrentSlide);
-      Reveal.on('slidechanged', maybeInitMlPm2OnCurrentSlide);
-    } else {
-      initMlPmGlobe2();
-    }
-  });
-</script>
-
----
-
-## Downloads
-Coming soon....
-
-## Improvements
-Hurricanes vs HM
-<div style="font-size:0.7em">
-Ensembles are needed for hurricane forecasts because a single average windspeed or rainfall hides the range of plausible outcomes. Different model runs (or slightly different starting conditions) can produce very different tracks, intensities and timing — and impacts (storm surge, rainfall) are highly nonlinear in windspeed. An ensemble shows the spread and probability of extreme outcomes so forecasters can communicate risk (e.g., “10% chance of hurricane-force winds here”) instead of a misleading single average number.
-
-![](/images/hurricane.png)
-
-The same logic applies to land-cover or human-impact forecasts: these systems are driven by many uncertain processes (policy choices, development, fires, climate) and small differences can lead to very different spatial outcomes. A mean map blurs alternative futures and can hide hotspots or tipping points; an ensemble of scenarios/models reveals where change is likely, how certain that is, and the tails that matter for planning and conservation.
-</div>
-
-## Questions
-
-glenn.moncrieff@tnc.org

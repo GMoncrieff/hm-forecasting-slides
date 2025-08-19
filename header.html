@@ -1,0 +1,16 @@
+<style>
+  /* Disable vertical scrolling only on slides with the .no-scroll class */
+  .reveal .slide.no-scroll { overflow-y: hidden !important; }
+</style>
+
+<script>
+  // Global token for the whole deck (read from env at render time)
+  window.MAPBOX_TOKEN = "{{< env MAPBOX_TOKEN >}}";
+  if (!window.MAPBOX_TOKEN) {
+    console.warn('MAPBOX_TOKEN env var not set. Mapbox slide may not load.');
+  }
+  if (window.mapboxgl && window.MAPBOX_TOKEN) {
+    mapboxgl.accessToken = window.MAPBOX_TOKEN;
+  }
+</script>
+
