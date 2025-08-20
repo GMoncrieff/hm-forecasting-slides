@@ -43,10 +43,19 @@ jobs:
         env:
           STATICRYPT_PASSWORD: ${{ secrets.STATICRYPT_PASSWORD }}
         run: |
-          npx --yes staticrypt _site/index.html \
+          set -euo pipefail
+          ls -l _site/
+          if [ -z "${STATICRYPT_PASSWORD:-}" ]; then
+            echo "STATICRYPT_PASSWORD is not set" >&2
+            exit 1
+          fi
+          # Encrypt to a temp file then replace atomically
+          npx --yes staticrypt encrypt _site/index.html \
             --password "$STATICRYPT_PASSWORD" \
-            --output _site/index.html \
+            --output _site/index.protected.html \
             --template-instructions "Enter password"
+          mv -f _site/index.protected.html _site/index.html
+          ls -l _site/
 
       - name: Verify encryption occurred
         run: |
