@@ -48,6 +48,14 @@ jobs:
             --output _site/index.html \
             --template-instructions "Enter password"
 
+      - name: Verify encryption occurred
+        run: |
+          head -n 30 _site/index.html
+          if ! grep -qi "staticrypt" _site/index.html; then
+            echo "Staticrypt marker not found in _site/index.html. Failing."
+            exit 1
+          fi
+
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v3
         with:
