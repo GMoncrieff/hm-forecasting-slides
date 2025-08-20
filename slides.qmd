@@ -33,15 +33,15 @@ e.g.<br><br>
 
 
 **High detail - actionable but hard to predict**<br>
-Will a specifc 300m pixel be converted to housing between 2095 and 2100?<br>
-_How much will it rain in my neighbourhood park on the 3rd Monday in July in 2028_<br><br>
+Will a specific 300m pixel be converted to housing between 2095 and 2100?<br>
+_How much will it rain in my neighborhood park on the 3rd Monday in July in 2028_<br><br>
 
-**Medium detail - informataive and somewhat predictable**<br>
-Overall change in human pressue at 1km resolution between 2020 and 2040<br>
-_Likelihood the maximum monthly temp in July 2050 in Denver will exceed 90F /32C in 2050_<br><br>
+**Medium detail - informative and somewhat predictable**<br>
+Overall change in human pressure at 1km resolution between 2020 and 2040<br>
+_Likelihood the maximum monthly temperature in July 2050 in Denver will exceed 90F /32C in 2050_<br><br>
 
-**Low detail -less useful but more predictable**<br>
-Overall pressue at Country scale in 2030<br>
+**Low detail - less useful but more predictable**<br>
+Overall pressure at Country scale in 2030<br>
 _The global average temperature in 2030_<br><br>
 </div>
 
@@ -53,6 +53,9 @@ We use a multi-horizon forecast approach to forecast human modification at 1km r
 
 ## Model covariates
 <div style="font-size:0.5em">
+
+- **Individual HM pressures**  
+  Agriculture, Built-up, Energy and Mining, Resource Use, Accessibility, Natural Systems Modification, Pollution, Transportation. 1990 to 2020
 
 - **Topography**  
   Elevation, Slope, Aspect, Topographic Position Index
@@ -77,7 +80,7 @@ We use a multi-horizon forecast approach to forecast human modification at 1km r
   ![](/images/dsi.png) [Oakleaf et al 2024](https://www.nature.com/articles/s41597-024-03639-9) 
 
 - **Location**  
-  Encodes the influence of location (unaccounted for by covarites) on human modification change. 
+  Encodes the influence of location (unaccounted for by covariates) on human modification change. 
     ![](/images/location.png) [Russwurm et al 2024](https://arxiv.org/abs/2310.06743) 
 
 - **Neighborhood**  
