@@ -34,6 +34,20 @@ jobs:
           quarto --version
           quarto render slides.qmd --output-dir _site
 
+      - name: Setup Node (for Staticrypt)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Protect site with Staticrypt (encrypt index.html)
+        if: ${{ secrets.STATICRYPT_PASSWORD != '' }}
+        env:
+          STATICRYPT_PASSWORD: ${{ secrets.STATICRYPT_PASSWORD }}
+        run: |
+          npx --yes staticrypt _site/index.html "$STATICRYPT_PASSWORD" \
+            --output _site/index.html \
+            --template-instructions "Enter password"
+
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v3
         with:

@@ -1100,8 +1100,8 @@ more work to come here
       });
       map3.addLayer({ id: esriLayerId, type: 'raster', source: esriSrcId });
 
-      // PMTiles: duplo layer
-      const pmtilesUrl = 'https://pub-6b6a1d5b041c4c749efaeb294cda9aac.r2.dev/duplo_katie.pmtiles';
+      // PMTiles: HM increase 2020-2040
+      const pmtilesUrl = 'https://pub-6b6a1d5b041c4c749efaeb294cda9aac.r2.dev/diff2040.pmtiles';
       const srcId = 'pmtiles-low2040-3';
       const layerId = 'pmtiles-low2040-3';
       map3.addSource(srcId, { type: 'raster', tiles: [`pmtiles://${pmtilesUrl}/{z}/{x}/{y}`], tileSize: 512 });
@@ -1135,6 +1135,106 @@ more work to come here
       Reveal.on('slidechanged', maybeInitMlPm3OnCurrentSlide);
     } else {
       initMlPmGlobe3();
+    }
+  });
+</script>
+
+---
+
+## Uncertainty in 2040
+
+```{=html}
+<style>
+  /* Simple layout without legend (duplicate of HM increase) */
+  .ml4-wrap { position: relative; }
+  .ml4-ctrl { position:absolute; right:10px; top:10px; z-index:1000; background:rgba(255,255,255,0.94); padding:8px 10px; border-radius:4px; font-size:13px; box-shadow:0 1px 4px rgba(0,0,0,0.2); display:flex; align-items:center; gap:8px; }
+  .ml4-ctrl input[type="range"] { width:120px; }
+  @media (max-width: 720px) { .ml4-ctrl { font-size:12px; } }
+  </style>
+<div class="ml4-wrap">
+  <div id="ml-pmtiles-globe-4" style="height: 460px; margin-top: 0.5rem;"></div>
+  <div class="ml4-ctrl" aria-label="Opacity control">
+    <span>Opacity</span>
+    <input id="ml4-opacity" type="range" min="0" max="1" step="0.05" value="0.95" />
+    <span id="ml4-opacity-val">0.95</span>
+  </div>
+</div>
+```
+
+<script>
+  let mlPm4Inited = false;
+  function initMlPmGlobe4() {
+    if (mlPm4Inited) return;
+    mlPm4Inited = true;
+    if (!window.maplibregl || !window.pmtiles) {
+      console.error('MapLibre GL or PMTiles not loaded');
+      return;
+    }
+    // Register pmtiles protocol (ignore if already registered)
+    try {
+      const protocol4 = new pmtiles.Protocol();
+      if (typeof maplibregl.addProtocol === 'function') {
+        try { maplibregl.addProtocol('pmtiles', protocol4.tile); } catch (_) {}
+      }
+    } catch (_) {}
+
+    const blankStyle = { version: 8, sources: {}, layers: [], name: 'blank' };
+    const map4 = new maplibregl.Map({
+      container: 'ml-pmtiles-globe-4',
+      style: blankStyle,
+      center: [18.48, -33.8518],
+      zoom: 2,
+      attributionControl: true
+    });
+
+    map4.on('style.load', () => {
+      try { map4.setProjection({ type: 'globe' }); } catch (e) { console.warn('Globe projection not available:', e); }
+      // Esri basemap
+      const esriSrcId = 'esri-world-4';
+      const esriLayerId = 'esri-world-4';
+      map4.addSource(esriSrcId, {
+        type: 'raster',
+        tiles: ['https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+        tileSize: 256,
+        attribution: 'Esri, Maxar, Earthstar Geographics, and the GIS User Community'
+      });
+      map4.addLayer({ id: esriLayerId, type: 'raster', source: esriSrcId });
+
+      // PMTiles: duplicate of HM increase slide
+      const pmtilesUrl = 'https://pub-6b6a1d5b041c4c749efaeb294cda9aac.r2.dev/duplo_katie.pmtiles';
+      const srcId = 'pmtiles-low2040-4';
+      const layerId = 'pmtiles-low2040-4';
+      map4.addSource(srcId, { type: 'raster', tiles: [`pmtiles://${pmtilesUrl}/{z}/{x}/{y}`], tileSize: 512 });
+      map4.addLayer({ id: layerId, type: 'raster', source: srcId, paint: { 'raster-opacity': 0.95 } });
+
+      // Opacity slider wiring
+      const op = document.getElementById('ml4-opacity');
+      const opVal = document.getElementById('ml4-opacity-val');
+      if (op) {
+        const setOp = (v) => { try { map4.setPaintProperty(layerId, 'raster-opacity', v); if (opVal) opVal.textContent = (+v).toFixed(2); } catch(e) {} };
+        setOp(parseFloat(op.value || '0.95'));
+        op.addEventListener('input', () => setOp(parseFloat(op.value)));
+      }
+
+      // Resize nudges
+      setTimeout(() => map4.resize(), 200);
+      requestAnimationFrame(() => map4.resize());
+    });
+  }
+
+  function maybeInitMlPm4OnCurrentSlide() {
+    const current = window.Reveal && Reveal.getCurrentSlide ? Reveal.getCurrentSlide() : null;
+    if (current && current.querySelector('#ml-pmtiles-globe-4')) {
+      initMlPmGlobe4();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.Reveal) {
+      Reveal.on('ready', maybeInitMlPm4OnCurrentSlide);
+      Reveal.on('slidechanged', maybeInitMlPm4OnCurrentSlide);
+    } else {
+      initMlPmGlobe4();
     }
   });
 </script>
