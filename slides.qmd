@@ -624,6 +624,11 @@ more work to come here
   /* Tighten slider spacing */
   .ml-slider { display:flex; align-items:center; gap:8px; }
   .ml-spacer { flex:1; }
+  /* Forecast legend */
+  .ml-forecast-wrap { position: relative; }
+  .ml-forecast-legend { position:absolute; right:10px; top:10px; z-index:1000; background:rgba(255,255,255,0.94); padding:8px 10px; border-radius:4px; font-size:13px; box-shadow:0 1px 4px rgba(0,0,0,0.2); max-width:260px; }
+  .ml-forecast-legend .item { display:flex; align-items:center; gap:8px; margin:4px 0; }
+  .ml-forecast-legend .swatch { width:14px; height:14px; border:1px solid rgba(0,0,0,0.4); border-radius:2px; }
 </style>
 <div class="ml-controls">
   <div class="ml-panel">
@@ -659,8 +664,25 @@ more work to come here
     </div>
     <div class="ml-spacer"></div>
   </div>
+ </div>
+<div class="ml-forecast-wrap">
+  <div id="ml-pmtiles-globe" style="height: 420px; margin-top: 0.5rem;"></div>
+  <div class="ml-forecast-legend" aria-label="HM legend">
+    <div class="item"><span class="swatch" style="background:#2c5500;"></span><span>Least Modified (0)</span></div>
+    <div class="item"><span class="swatch" style="background:#2c5500;"></span><span>0.0026</span></div>
+    <div class="item"><span class="swatch" style="background:#3a7300;"></span><span>0.0026</span></div>
+    <div class="item"><span class="swatch" style="background:#478d00;"></span><span>0.0068</span></div>
+    <div class="item"><span class="swatch" style="background:#53a600;"></span><span>0.0139</span></div>
+    <div class="item"><span class="swatch" style="background:#b2ba74;"></span><span>0.0256</span></div>
+    <div class="item"><span class="swatch" style="background:#cac591;"></span><span>0.0449</span></div>
+    <div class="item"><span class="swatch" style="background:#e2cfae;"></span><span>Moderately Modified (0.0770)</span></div>
+    <div class="item"><span class="swatch" style="background:#e09ba5;"></span><span>0.1310</span></div>
+    <div class="item"><span class="swatch" style="background:#d957b9;"></span><span>0.3630</span></div>
+    <div class="item"><span class="swatch" style="background:#c62ca0;"></span><span>0.6030</span></div>
+    <div class="item"><span class="swatch" style="background:#5c0045;"></span><span>0.9700</span></div>
+    <div class="item"><span class="swatch" style="background:#5c0045;"></span><span>Most Modified (1)</span></div>
+  </div>
 </div>
-<div id="ml-pmtiles-globe" style="height: 420px; margin-top: 0.5rem;"></div>
 <div class="ml-chart-wrap">
   <div class="ml-chart-inner">
     <div id="ml-edr">Click on the map to fetch HM EDR time series…</div>
@@ -1050,13 +1072,23 @@ more work to come here
   .ml3-ctrl { position:absolute; right:10px; top:10px; z-index:1000; background:rgba(255,255,255,0.94); padding:8px 10px; border-radius:4px; font-size:13px; box-shadow:0 1px 4px rgba(0,0,0,0.2); display:flex; align-items:center; gap:8px; }
   .ml3-ctrl input[type="range"] { width:120px; }
   @media (max-width: 720px) { .ml3-ctrl { font-size:12px; } }
-  </style>
+  /* Legend (coolwarm) */
+  .ml3-legend { position:absolute; right:10px; top:60px; z-index:1000; background:rgba(255,255,255,0.94); padding:8px 10px; border-radius:4px; font-size:13px; box-shadow:0 1px 4px rgba(0,0,0,0.2); width:180px; }
+  .ml3-legend .title { font-weight:600; margin-bottom:6px; }
+  .ml3-legend .bar { height:12px; border:1px solid rgba(0,0,0,0.25); background: linear-gradient(to right, #3b4cc0, #d4dbe6 50%, #b40426); border-radius:2px; }
+  .ml3-legend .ticks { display:flex; justify-content:space-between; font-size:11px; margin-top:4px; }
+</style>
 <div class="ml3-wrap">
   <div id="ml-pmtiles-globe-3" style="height: 460px; margin-top: 0.5rem;"></div>
   <div class="ml3-ctrl" aria-label="Opacity control">
     <span>Opacity</span>
     <input id="ml3-opacity" type="range" min="0" max="1" step="0.05" value="0.95" />
     <span id="ml3-opacity-val">0.95</span>
+  </div>
+  <div class="ml3-legend" aria-label="Legend">
+    <div class="title">HM increase (2020–2040)</div>
+    <div class="bar"></div>
+    <div class="ticks"><span>-0.1</span><span>0</span><span>0.1</span></div>
   </div>
 </div>
 ```
@@ -1150,13 +1182,23 @@ more work to come here
   .ml4-ctrl { position:absolute; right:10px; top:10px; z-index:1000; background:rgba(255,255,255,0.94); padding:8px 10px; border-radius:4px; font-size:13px; box-shadow:0 1px 4px rgba(0,0,0,0.2); display:flex; align-items:center; gap:8px; }
   .ml4-ctrl input[type="range"] { width:120px; }
   @media (max-width: 720px) { .ml4-ctrl { font-size:12px; } }
-  </style>
+  /* Legend (inferno) */
+  .ml4-legend { position:absolute; right:10px; top:60px; z-index:1000; background:rgba(255,255,255,0.94); padding:8px 10px; border-radius:4px; font-size:13px; box-shadow:0 1px 4px rgba(0,0,0,0.2); width:180px; }
+  .ml4-legend .title { font-weight:600; margin-bottom:6px; }
+  .ml4-legend .bar { height:12px; border:1px solid rgba(0,0,0,0.25); background: linear-gradient(to right, #000004, #1f0c48, #550f6d, #88226a, #b63655, #e35933, #fca50a, #fcffa4); border-radius:2px; }
+  .ml4-legend .ticks { display:flex; justify-content:space-between; font-size:11px; margin-top:4px; }
+</style>
 <div class="ml4-wrap">
   <div id="ml-pmtiles-globe-4" style="height: 460px; margin-top: 0.5rem;"></div>
   <div class="ml4-ctrl" aria-label="Opacity control">
     <span>Opacity</span>
     <input id="ml4-opacity" type="range" min="0" max="1" step="0.05" value="0.95" />
     <span id="ml4-opacity-val">0.95</span>
+  </div>
+  <div class="ml4-legend" aria-label="Legend">
+    <div class="title">Uncertainty (σ)</div>
+    <div class="bar"></div>
+    <div class="ticks"><span>0.0</span><span>0.2</span><span>0.4</span></div>
   </div>
 </div>
 ```
