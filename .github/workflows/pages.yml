@@ -67,13 +67,21 @@ jobs:
                    --template-instructions "Enter password"
           )
           echo "After encryption:" && ls -l _site/
-          # Find an encrypted HTML and promote it to index.html if needed
-          ENC_FILE=$(grep -ril "staticrypt" _site/*.html || true)
+          # If Staticrypt created a subdirectory (e.g., _site/encrypted), use the first HTML in there
+          if [ -d _site/encrypted ]; then
+            echo "Encrypted directory found: _site/encrypted"
+            CANDIDATE=$(find _site/encrypted -maxdepth 1 -type f -name '*.html' | head -n1)
+            if [ -n "$CANDIDATE" ]; then
+              echo "Promoting $CANDIDATE to _site/index.html"
+              mv -f "$CANDIDATE" _site/index.html
+            fi
+          fi
+          # Find an encrypted HTML anywhere under _site and promote it to index.html if needed
+          ENC_FILE=$(find _site -type f -name '*.html' -print0 | xargs -0 grep -ril "staticrypt" || true)
           if [ -z "$ENC_FILE" ]; then
             echo "No encrypted HTML produced. Failing." >&2
             exit 1
           fi
-          # If index.html is not encrypted yet, replace it with the first encrypted candidate
           if ! grep -qi "staticrypt" _site/index.html; then
             FIRST_ENC=$(echo "$ENC_FILE" | head -n1)
             echo "Replacing _site/index.html with $FIRST_ENC"
