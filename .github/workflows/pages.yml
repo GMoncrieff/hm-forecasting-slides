@@ -50,7 +50,8 @@ jobs:
             exit 1
           fi
           # Encrypt to a temp file then replace atomically
-          npx --yes staticrypt encrypt _site/index.html \
+          npx --yes staticrypt --version || true
+          npx --yes staticrypt _site/index.html \
             --password "$STATICRYPT_PASSWORD" \
             --output _site/index.protected.html \
             --template-instructions "Enter password"
