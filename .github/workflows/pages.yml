@@ -40,7 +40,6 @@ jobs:
           node-version: '20'
 
       - name: Protect site with Staticrypt (encrypt index.html)
-        if: ${{ secrets.STATICRYPT_PASSWORD != '' }}
         env:
           STATICRYPT_PASSWORD: ${{ secrets.STATICRYPT_PASSWORD }}
         run: |
