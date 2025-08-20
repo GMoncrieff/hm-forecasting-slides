@@ -43,7 +43,8 @@ jobs:
         env:
           STATICRYPT_PASSWORD: ${{ secrets.STATICRYPT_PASSWORD }}
         run: |
-          npx --yes staticrypt _site/index.html "$STATICRYPT_PASSWORD" \
+          npx --yes staticrypt _site/index.html \
+            --password "$STATICRYPT_PASSWORD" \
             --output _site/index.html \
             --template-instructions "Enter password"
 
