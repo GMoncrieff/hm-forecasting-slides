@@ -49,14 +49,37 @@ jobs:
             echo "STATICRYPT_PASSWORD is not set" >&2
             exit 1
           fi
-          # Encrypt to a temp file then replace atomically
+          # Encrypt from inside _site to ensure outputs land there
+          set -x
           npx --yes staticrypt --version || true
-          npx --yes staticrypt _site/index.html \
-            --password "$STATICRYPT_PASSWORD" \
-            --output _site/index.protected.html \
-            --template-instructions "Enter password"
-          mv -f _site/index.protected.html _site/index.html
-          ls -l _site/
+          (
+            cd _site
+            npx --yes staticrypt index.html \
+              --password "$STATICRYPT_PASSWORD" \
+              --output . \
+              --template-instructions "Enter password" \
+              || npx --yes staticrypt index.html \
+                   --password "$STATICRYPT_PASSWORD" \
+                   --output-dir . \
+                   --template-instructions "Enter password" \
+              || npx --yes staticrypt index.html \
+                   --password "$STATICRYPT_PASSWORD" \
+                   --template-instructions "Enter password"
+          )
+          echo "After encryption:" && ls -l _site/
+          # Find an encrypted HTML and promote it to index.html if needed
+          ENC_FILE=$(grep -ril "staticrypt" _site/*.html || true)
+          if [ -z "$ENC_FILE" ]; then
+            echo "No encrypted HTML produced. Failing." >&2
+            exit 1
+          fi
+          # If index.html is not encrypted yet, replace it with the first encrypted candidate
+          if ! grep -qi "staticrypt" _site/index.html; then
+            FIRST_ENC=$(echo "$ENC_FILE" | head -n1)
+            echo "Replacing _site/index.html with $FIRST_ENC"
+            mv -f "$FIRST_ENC" _site/index.html
+          fi
+          echo "Final listing:" && ls -l _site/
 
       - name: Verify encryption occurred
         run: |
