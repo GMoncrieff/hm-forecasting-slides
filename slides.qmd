@@ -635,14 +635,26 @@ more work to come here
 </style>
 <div class="ml-controls">
   <div class="ml-panel">
-    <div class="ml-panel-title">Top layer</div>
-    <label for="pm-layer-select-1">Source:</label>
-    <select id="pm-layer-select-1">
-      <option value="obs1990" selected>Observed 1990</option>
-      <option value="obs2020">Observed 2020</option>
-      <option value="mean2040">Mean 2040</option>
-      <option value="upper2040">Upper 2040</option>
-      <option value="lower2040">Lower 2040</option>
+    <div class="ml-panel-title">Bottom layer</div>
+    <label for="pm-year-1">Year:</label>
+    <select id="pm-year-1">
+      <option value="1990" selected>1990</option>
+      <option value="1995">1995</option>
+      <option value="2000">2000</option>
+      <option value="2005">2005</option>
+      <option value="2010">2010</option>
+      <option value="2015">2015</option>
+      <option value="2020">2020</option>
+      <option value="2025">2025</option>
+      <option value="2030">2030</option>
+      <option value="2035">2035</option>
+      <option value="2040">2040</option>
+    </select>
+    <label for="pm-param-1">Parameter:</label>
+    <select id="pm-param-1">
+      <option value="lower">Lower</option>
+      <option value="middle" selected>Middle</option>
+      <option value="upper">Upper</option>
     </select>
     <div class="ml-slider">
       <span>Opacity</span>
@@ -651,14 +663,26 @@ more work to come here
     </div>
   </div>
   <div class="ml-panel">
-    <div class="ml-panel-title">Bottom layer</div>
-    <label for="pm-layer-select-2">Source:</label>
-    <select id="pm-layer-select-2">
-      <option value="obs1990">Observed 1990</option>
-      <option value="obs2020">Observed 2020</option>
-      <option value="mean2040" selected>Mean 2040</option>
-      <option value="upper2040">Upper 2040</option>
-      <option value="lower2040">Lower 2040</option>
+    <div class="ml-panel-title">Top layer</div>
+    <label for="pm-year-2">Year:</label>
+    <select id="pm-year-2">
+      <option value="1990">1990</option>
+      <option value="1995">1995</option>
+      <option value="2000">2000</option>
+      <option value="2005">2005</option>
+      <option value="2010">2010</option>
+      <option value="2015">2015</option>
+      <option value="2020">2020</option>
+      <option value="2025">2025</option>
+      <option value="2030">2030</option>
+      <option value="2035">2035</option>
+      <option value="2040" selected>2040</option>
+    </select>
+    <label for="pm-param-2">Parameter:</label>
+    <select id="pm-param-2">
+      <option value="lower">Lower</option>
+      <option value="middle" selected>Middle</option>
+      <option value="upper">Upper</option>
     </select>
     <div class="ml-slider">
       <span>Opacity</span>
@@ -671,19 +695,11 @@ more work to come here
 <div class="ml-forecast-wrap">
   <div id="ml-pmtiles-globe" style="height: 420px; margin-top: 0.5rem;"></div>
   <div class="ml-forecast-legend" aria-label="HM legend">
-    <div class="item"><span class="swatch" style="background:#2c5500;"></span><span>Least Modified (0)</span></div>
-    <div class="item"><span class="swatch" style="background:#2c5500;"></span><span>0.0026</span></div>
-    <div class="item"><span class="swatch" style="background:#3a7300;"></span><span>0.0026</span></div>
-    <div class="item"><span class="swatch" style="background:#478d00;"></span><span>0.0068</span></div>
-    <div class="item"><span class="swatch" style="background:#53a600;"></span><span>0.0139</span></div>
-    <div class="item"><span class="swatch" style="background:#b2ba74;"></span><span>0.0256</span></div>
-    <div class="item"><span class="swatch" style="background:#cac591;"></span><span>0.0449</span></div>
-    <div class="item"><span class="swatch" style="background:#e2cfae;"></span><span>Moderately Modified (0.0770)</span></div>
-    <div class="item"><span class="swatch" style="background:#e09ba5;"></span><span>0.1310</span></div>
-    <div class="item"><span class="swatch" style="background:#d957b9;"></span><span>0.3630</span></div>
-    <div class="item"><span class="swatch" style="background:#c62ca0;"></span><span>0.6030</span></div>
-    <div class="item"><span class="swatch" style="background:#5c0045;"></span><span>0.9700</span></div>
-    <div class="item"><span class="swatch" style="background:#5c0045;"></span><span>Most Modified (1)</span></div>
+    <div style="font-weight:600; margin-bottom:6px;">Overall Human Modification</div>
+    <div class="item" style="align-items:center;">
+      <div style="flex:1; height:14px; border:1px solid rgba(0,0,0,0.25); border-radius:2px; background: linear-gradient(to right, #30123b, #4145ab, #2c7bb6, #00a6ca, #00ccbc, #90eb9d, #f9d057, #f29e2e, #e76818, #d7191c);"></div>
+    </div>
+    <div style="display:flex; justify-content:space-between; font-size:11px;"><span>0</span><span>1</span></div>
   </div>
 </div>
 <div class="ml-chart-wrap">
@@ -705,14 +721,9 @@ more work to come here
     if (mlPmInited) return;
     mlPmInited = true;
 
-    if (!window.maplibregl || !window.pmtiles) {
-      console.error('MapLibre GL or PMTiles not loaded');
+    if (!window.maplibregl) {
+      console.error('MapLibre GL not loaded');
       return;
-    }
-
-    const protocol = new pmtiles.Protocol();
-    if (typeof maplibregl.addProtocol === 'function') {
-      maplibregl.addProtocol('pmtiles', protocol.tile);
     }
 
     // Minimal blank style; we'll add Esri + PMTiles sources/layers explicitly
@@ -743,74 +754,91 @@ more work to come here
         map.addLayer({ id: esriLayerId, type: 'raster', source: esriSrcId });
       }
 
-      // PMTiles datasets
-      const PM_SOURCES = {
-        obs1990: 'https://pub-6b6a1d5b041c4c749efaeb294cda9aac.r2.dev/obs1990_katie.pmtiles',
-        obs2020: 'https://pub-6b6a1d5b041c4c749efaeb294cda9aac.r2.dev/obs2020_katie.pmtiles',
-        mean2040: 'https://pub-6b6a1d5b041c4c749efaeb294cda9aac.r2.dev/mid2040_katie.pmtiles',
-        upper2040: 'https://pub-6b6a1d5b041c4c749efaeb294cda9aac.r2.dev/upp2040_katie.pmtiles',
-        lower2040: 'https://pub-6b6a1d5b041c4c749efaeb294cda9aac.r2.dev/low2040_katie.pmtiles'
+      // XYZ tiles URL template
+      const buildXyzUrl = (param, year) => {
+        return `https://compute.earthmover.io/v1/services/tiles/the-nature-conservancy/hm-multitemp/main/hm/tiles/WebMercatorQuad/{z}/{y}/{x}?variables=${param}&date=${year}-01-01T00:00:00&colorscalerange=0,1&style=raster/turbo&width=512&height=512`;
       };
-      const KEYS = Object.keys(PM_SOURCES);
-      // Add sources for each dataset
-      KEYS.forEach((k) => {
-        const url = PM_SOURCES[k];
-        if (!url) return; // skip missing
-        const srcId = `pm-src-${k}`;
-        if (!map.getSource(srcId)) {
-          map.addSource(srcId, { type: 'raster', tiles: [`pmtiles://${url}/{z}/{x}/{y}`], tileSize: 512 });
-        }
-      });
-      // Create per-panel layers for each dataset
-      const LYR = { 1: {}, 2: {} };
-      const ensureLayer = (panel, key) => {
-        const srcId = `pm-src-${key}`;
-        if (!PM_SOURCES[key]) return; // no source
-        const id = `pm${panel}-${key}`;
-        LYR[panel][key] = id;
-        if (!map.getLayer(id)) {
-          map.addLayer({ id, type: 'raster', source: srcId, paint: { 'raster-opacity': 1.0 } });
-          map.setLayoutProperty(id, 'visibility', 'none');
-        }
-      };
-      KEYS.forEach((k) => { ensureLayer(1, k); ensureLayer(2, k); });
 
-      // Helpers to apply selection/opacity per panel
-      function applySelection(panel, key) {
-        KEYS.forEach((k) => {
-          const id = LYR[panel][k];
-          if (!id) return;
-          try { map.setLayoutProperty(id, 'visibility', k === key ? 'visible' : 'none'); } catch (e) {}
+      // Layer management for two panels
+      const LAYER_IDS = { 1: 'xyz-layer-1', 2: 'xyz-layer-2' };
+      const SOURCE_IDS = { 1: 'xyz-source-1', 2: 'xyz-source-2' };
+
+      // Function to update layer source with new year/param
+      const updateLayer = (panel, param, year, opacity) => {
+        const layerId = LAYER_IDS[panel];
+        const sourceId = SOURCE_IDS[panel];
+        const url = buildXyzUrl(param, year);
+        
+        // Remove existing layer and source
+        if (map.getLayer(layerId)) map.removeLayer(layerId);
+        if (map.getSource(sourceId)) map.removeSource(sourceId);
+        
+        // Add new source and layer
+        map.addSource(sourceId, {
+          type: 'raster',
+          tiles: [url],
+          tileSize: 256
         });
-      }
+        map.addLayer({
+          id: layerId,
+          type: 'raster',
+          source: sourceId,
+          paint: { 'raster-opacity': opacity }
+        });
+      };
+
+      // Helper to apply opacity to existing layer
       function applyOpacity(panel, value) {
-        KEYS.forEach((k) => {
-          const id = LYR[panel][k];
-          if (!id) return;
-          try { map.setPaintProperty(id, 'raster-opacity', value); } catch (e) {}
-        });
+        const layerId = LAYER_IDS[panel];
+        if (map.getLayer(layerId)) {
+          try { map.setPaintProperty(layerId, 'raster-opacity', value); } catch (e) {}
+        }
       }
 
       // Wire UI controls
-      const sel1 = document.getElementById('pm-layer-select-1');
-      const sel2 = document.getElementById('pm-layer-select-2');
+      const year1 = document.getElementById('pm-year-1');
+      const param1 = document.getElementById('pm-param-1');
+      const year2 = document.getElementById('pm-year-2');
+      const param2 = document.getElementById('pm-param-2');
       const op1 = document.getElementById('pm-opacity-1');
       const op2 = document.getElementById('pm-opacity-2');
       const op1Val = document.getElementById('pm-opacity-1-val');
       const op2Val = document.getElementById('pm-opacity-2-val');
 
-      // Initial state: Top per selection, Bottom per selection
-      applySelection(1, sel1 ? sel1.value : 'obs1990');
-      applySelection(2, sel2 ? sel2.value : 'mean2040');
+      // Initial state
+      const initYear1 = year1 ? year1.value : '1990';
+      const initParam1 = param1 ? param1.value : 'middle';
+      const initYear2 = year2 ? year2.value : '2040';
+      const initParam2 = param2 ? param2.value : 'middle';
       const initOp1 = op1 ? parseFloat(op1.value) : 1.0;
       const initOp2 = op2 ? parseFloat(op2.value) : 0.0;
-      applyOpacity(1, initOp1);
-      applyOpacity(2, initOp2);
+      
+      updateLayer(1, initParam1, initYear1, initOp1);
+      updateLayer(2, initParam2, initYear2, initOp2);
       if (op1Val) op1Val.textContent = initOp1.toFixed(2);
       if (op2Val) op2Val.textContent = initOp2.toFixed(2);
 
-      if (sel1) sel1.addEventListener('change', () => applySelection(1, sel1.value));
-      if (sel2) sel2.addEventListener('change', () => applySelection(2, sel2.value));
+      // Event listeners for layer 1
+      const updateLayer1 = () => {
+        const y = year1 ? year1.value : '1990';
+        const p = param1 ? param1.value : 'middle';
+        const o = op1 ? parseFloat(op1.value) : 1.0;
+        updateLayer(1, p, y, o);
+      };
+      if (year1) year1.addEventListener('change', updateLayer1);
+      if (param1) param1.addEventListener('change', updateLayer1);
+      
+      // Event listeners for layer 2
+      const updateLayer2 = () => {
+        const y = year2 ? year2.value : '2040';
+        const p = param2 ? param2.value : 'middle';
+        const o = op2 ? parseFloat(op2.value) : 0.0;
+        updateLayer(2, p, y, o);
+      };
+      if (year2) year2.addEventListener('change', updateLayer2);
+      if (param2) param2.addEventListener('change', updateLayer2);
+      
+      // Opacity controls
       if (op1) op1.addEventListener('input', () => { const v = parseFloat(op1.value); if (op1Val) op1Val.textContent = v.toFixed(2); applyOpacity(1, v); });
       if (op2) op2.addEventListener('input', () => { const v = parseFloat(op2.value); if (op2Val) op2Val.textContent = v.toFixed(2); applyOpacity(2, v); });
 
