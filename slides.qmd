@@ -29,8 +29,6 @@ Forecasts of human impacts help us anticipate where and when pressures on ecosys
 ![Impact](/images/impact1.png) <br>
 But forecasting human impacts is not easy. There is a trade-off between the level of detail in the forecast and the uncertainty/accuracy of the forecast.
 <br>
-e.g.<br><br>
-
 
 **High detail - actionable but hard to predict**<br>
 Will a specific 300m pixel be converted to housing between 2095 and 2100?<br>
@@ -43,98 +41,157 @@ _Likelihood the maximum monthly temperature in July 2050 in Denver will exceed 9
 **Low detail - less useful but more predictable**<br>
 Overall pressure at Country scale in 2030<br>
 _The global average temperature in 2030_<br><br>
+
+Recognizing this trade-off, we do not attempt to forecasts HM at fine scale or far into the future. Instead, we focus on forecasting HM at 1km resolution for the period 2020-2040. 
 </div>
 
 ## Our approach
 <div style="font-size:0.5em">
-We use a multi-horizon forecast approach to forecast human modification at 1km resolution for the period 2020-2040. We use a range of covariates to predict human modification, including population, economic development, and infrastructure development. The multi-horizon approach allows us to forecast human modification at different time horizons, from short-term (5 year) to long-term (20 year). </div>
-<br>
+The forecasts presented here build directly on the Global Human Modification (HM) time series. Using this historical HM record, we produce global, 1-km resolution forecasts of overall HM from 2020 to 2040 and provide calibrated uncertainty intervals for each forecast horizon. These layers offer plausible trajectories of cumulative human pressure that are consistent with observed patterns and rates in the underlying HM time series. They allow planners and decision makers to consider where cumulative human pressures—not just conversion—are likely to intensify, enabling threat-aware, forward-looking prioritisation. We use a multi-horizon forecast approach to predict human modification at every 5 year interval from 2020 to 2040. We use a range of covariates to predict human modification, including population, economic development, and infrastructure development. The multi-horizon approach allows us to forecast human modification at different time horizons, from short-term (5 year) to long-term (20 year). 
+<br><br>
+Potential reuse includes (i) risk-based site selection for protected and conserved areas and other area-based measures aligned with GBF Target 1; (ii) prospective evaluation of conservation additionality by comparing observed threat outcomes to expected trajectories; (iii) integration as pressure inputs to biodiversity impact models (e.g., GLOBIO) and ecosystem-condition indicators; and (iv) screening in spatial planning and environmental assessment where forward-looking pressure maps can complement land-use scenarios.
+</div>
+
+## The model
+<div style="font-size:0.5em">
+### Overview
+The overall structure of the model is to take both static and dynamic covariates and historical HM and convert these into tabular data, where each pixel is a row. This is then used to train a gradient-boosted tree model. The target for prediction is future HM at different time horizons. For example, if we are training a model using covariates and historical data on HM from 1990, 1995 and 2000, we can train one model to predict 5 years ahead (2005), another to predict 10 years ahead (2010), another 15 years ahead (2015), and another 20 years ahead (2020). After training these models, we can now give them the same covariates and any three successive HM observations (e.g. 2010, 2015, 2020) to produce predictions at these multiple time horizons (e.g. 2025, 2030, 2035, 2040). 
+
 ![](/images/hm_model2.gif){style="width:300%"}
 
-## Model covariates
-<div style="font-size:0.5em">
+### Model covariates
+_Static covariates_
 
-- **Individual HM pressures**  
-  Agriculture, Built-up, Energy and Mining, Resource Use, Accessibility, Natural Systems Modification, Pollution, Transportation. 1990 to 2020
+- **Protected areas (WDPA)** 
+
+Global polygons/points of protected and conserved areas from WDPA are used to derive two binary raster layers: (i) “strictly protected” (IUCN categories Ia, Ib, II) and (ii) “other protected” (all other IUCN categories). 
+
+- **Climate (CHELSA)** 
+
+Mean annual temperature, mean annual precipitation, and minimum temperature of the coldest month are derived from the monthly mean, max, mean temperature, and mean precipitation values from CHELSA. 
 
 - **Topography**  
-  Elevation, Slope, Aspect, Topographic Position Index
 
-- **Climate**  
-  Temperature, Precipitation
-
-- **Population**  
-  Population density at 1km resolution from 1990 to 2040
-
-- **NPP**  
-  Potential under historical climate
-
-- **GDP**  
-  GDP at 1km resolution from 1990 to 2040
-
-- **Protected areas**  
-  Encoded at 0/1
-
-- **Development Pressure**  
-  Development Suitabilty Index ranks development suitability scores from 0 (lowest) to 1 (highest) based on the average score across all development potential indices (DPIs) multiplied by the maximum score 
-  ![](/images/dsi.png) [Oakleaf et al 2024](https://www.nature.com/articles/s41597-024-03639-9) 
+EarthENv provides cross-scale topographic data derived primarily from GMTED2010/SRTM and aggregated to standardized 1 km products. Variables used here: elevation, slope, aspect sine (“eastness”), aspect cosine (“northness”), and topographic position index (TPI; elevation relative to neighborhood mean).  
 
 - **Location**  
-  Encodes the influence of location (unaccounted for by covariates) on human modification change. 
-    ![](/images/location.png) [Russwurm et al 2024](https://arxiv.org/abs/2310.06743) 
 
-- **Neighborhood**  
-  Average past HM and past HM change with a 6km and  120km radius using uber h3 spatial index
+Geographic coordinates are encoded using real spherical-harmonic basis functions following [Russwurm et al 2024](https://arxiv.org/abs/2310.06743). We encode each pixel’s latitude/longitude by projecting it onto a small set of smooth, globe-native “wave” patterns—spherical harmonics—so every place gets a stable, seam-free location fingerprint defined directly on the sphere. Compared with rectangular sin/cos encodings, spherical harmonics avoid artifacts at the dateline and poles because they are well-defined everywhere on the globe. Low orders capture only broad gradients (e.g., pole-to-equator), and increasing the order (L) adds finer spatial detail; in practice a modest order is picked, resulting in a fixed  compact feature vector (e.g., L =4 yields 25 features) that is computed once and fed to the model. <br>
+![](/images/location.png)
+
+- **Development Pressure**  
+ The Development Suitability Index (DSI) is a per-pixel metric ranging from 0 (least suitable) to 1 (most suitable) for assessing the potential for land development (Oakleaf 2024). It is constructed by first calculating multiple underlying development potential indices (DPIs), then combining them via an average multiplied by the maximum DPI value at each location.  <br>
+  ![](/images/dsi.png) [Oakleaf et al 2024](https://www.nature.com/articles/s41597-024-03639-9) 
+
+_Dynamic covariates_
+
+- **Human Modification**  
+HM itself and its component threats are also used as covariates. We use lagged overall HM for three historical time steps e.g. if predicting 2020 HM overall, data for 1990, 1995 and 2000 will be used as covariates when training a model for a 20 year forecast horizon. If predicting 2020 but training a model to predict over a 5 year forecast horizon, data for 2015, 2010 and 2005 will be used. We also difference these lags and add these differences as covariates. Finally we use the last observed HM components threat data e.g. If predicting 2020 with a 5 year forecast horizon model, HM component threats for 2015 are used as covariates. 
+
+- **Neighbourhood human modification (HM)**  
+Each year, we calculate human modification (HM) at two neighborhood scales by averaging the HM values across hexagonal zones defined by the H3 grid system —a hierarchical, globe-covering grid that divides Earth into equal-area hexagons (with a few pentagons for closure) at multiple resolutions. Specifically, we use resolution 4 cells (≈ 1,770 km²  each) to capture broader regional context and resolution 6 cells (≈ 36 km² each) to capture local context. Every pixel is assigned the average HM of the hexagon it falls into at those resolutions, giving it a neighborhood-level context rather than just its local HM value. The model includes neighborhood HM values for both lagged and differenced HM overall covariates. <br>
  ![](/images/h3.png)
+
+- **Population** 
+
+We use a 1 km global gridded population dataset spanning 1870–2100 at 10-year steps (Zhuang et al. 2024); for this model we subset 1990–2020. The series provides coherent historical and SSP-consistent future distributions. For the historical period, they relied on observed population maps (2000–2020) and applied statistical modeling methods to hindcast population distributions. Their approach involved using known population patterns from more recent decades to infer earlier distributions, ensuring spatial coherence and temporal consistency across time. The calculation of HM does not directly incorporate population data, and hence these data are not already explicitly included through HM covariates. 
+
+- **GDP** 
+
+We use gridded GDP projections compatible with the five SSPs from Murakami et al (2021). Data are available at ~10 km grids for 10-year steps from 1850–2100. Here we subset 1990–2020. The historical GDP data was downscaled to a ~10 km resolution via a spatial econometric downscaling model. Starting  with national-level historical GDP figures, a model is used  redistributed GDP across the grid. The model explicitly accounts for spatial and economic interactions among cities, along with a range of auxiliary geographic data—for example, road networks, land cover, and other urban context variables.  
+
+### Data splitting
+The full dataset is stratified by the level 4 H3 index, and 10% of all primarily terrestrial H3 indices are set aside for model fitting, validation, calibration, and testing. Because the distribution of HM is skewed toward low values, we stratify this sample by the average HM at H3 level 4, and sample equally from cells with overall HM less than 0.1, between 0.1 and 0.4 and greater than 0.4. From this subset, 70% of the H3 indices are used for model fitting, 10% for validation, 10% for calibration, and 10% for testing. The validation set was used to assess model performance when tuning settings, the calibration set was used to calibrate uncertainty, and the testing set was used only once to estimate the accuracy of the final model. The image below shows how this partitioning would work over the globe <br>
+
+![](/images/split.png)
+
+### Fitting and Calibration 
+
+Forecasts are produced in Python using MLForecast. MLForecast handles multi-step targets and lag/transform feature generation for each series. The base learner is LightGBM trained with the quantile objective.  
+We fit separate models for each horizon (i.e. 5 years ahead, 10 years ahead, 15 years ahead, 20 years ahead) at α=0.50 (median) and α  ∈  {0.025, 0.975}, creating a separate prediction for the median, upper and lower quantiles. From these quantiles we obtain 95% prediction bands. The raw quantile bands are then calibrated (i.e. adjusted up or down) using a held-out calibration split to ensure that the coverage of prediction intervals matches the 95% target (the true value will fall within the prediction intervals in 95/100 samples on average) using conformal prediction.  We quantify point-forecast accuracy with mean absolute error. 
 </div>
 
 ## Model performance
 <div style="font-size:0.5em">
-Comparing the fitted models against baseline assumptions - In the absence of a model we might assume either the status quo (zero change) or a linear trend. How does our model compare to these baselines over different horizons?
+Comparing the fitted models against baseline assumptions - In the absence of a model we might assume either the status quo (zero change) or a linear trend. How does our model compare to these baselines over different horizons? In the figure below ‘Multihorizon’ represents the median prediction from the multihorizon model, ‘Zero’ assumes that future HM does not change for the last observed HM. ‘Linear’ assumes HM continues to increase at the same rate observed between the last  2 observations. 
  ![](/images/horizon.png)
 
  Assuming that 5 years time will be the same as now is a hard baseline to beat, but as we go further into the future the model becomes better. It is never a great idea to assume that the change we last observed will continue in the future. 
 
  <br><br>
- How well can we predict HM in 20 years time?  <br><br> ![](/images/abs_err.png)  <br><br>Very well!  <br><br>
+ How well can we predict HM in 20 years time? THe figure belpw shows modelled vs observed HM with a 20 year forecast horizon (i.e. predicting 2020 with data up to 2000). HM is scaled by 10000 (i.e. 1000 = 0.1 HM, 10000 = 1 HM). <br><br> ![](/images/abs_err.png)  <br><br>Very well!  <br><br>
  But remember, just assuming it wont change works pretty well, so predicting the absolute value is not that hard
  <br><br>
-  How well can we predict how much HM will change in 20 years time?  <br><br> ![](/images/diff_err.png)  <br><br> It is hard, but we get the overall direction and magnitude right
+  How well can we predict how much HM will change in 20 years time?  Below we see modelled vs observed HM change over a 20 year forecast horizon (i.e. predicting change from 2000 to 2020 with data from 2000 to 1990). Again, HM is scaled by 10000. <br><br> ![](/images/diff_err.png)  <br><br> It is hard, but we get the overall direction and magnitude right
  <br><br>
 </div>
 
-## Change through time: Observed vs predicted
-<div style="font-size:0.5em">
-What do individual pixels look like? We see some in which it is quite certain they will remain intact and not change, some we suspect might become less intact, and some where we are very uncertain. Including uncertainty captures the range of possible outcomes and helps us understand the risk of different scenarios.
+## Comparing predictions to observations
 
+<div style="font-size:0.5em">
+What do individual pixels look like? Below we see how HM predicted from 2005 to 2020 based on data from 1990-2000, comparing predictions to observations. We see some in which it is quite certain they will remain intact and not change (first panel), Some that are high and expected to remain stable (second panel) some that are expected to reamin intact, but where loss of condition is a potential outcome (third panel), we suspect might become less intact. Latley we also see example where the a large change is observed, but the median prediction does not capture this. However, the wide uncertaitny band indicates that the models does not rule out this outcome (fourth panel). Including uncertainty captures the range of possible outcomes and helps us understand the risk of different scenarios.
  <br><br>
 ![](/images/timeseries.png)
   <br><br>
-
- We might not always get the mean prediction correct - this is a very hard problem to predict. But we can get well calibrated ranges so that we are 95% certain the true outcome will lie within these bounds. 
+Large changes in HM or major industrail development are rare and hard to predict. It is not unexpected that the model rarely predicted this to be the most likely outcome. What is encouraging is that the model helps us map where we cannot rule out that there will be a large change in the future. Likewise, areas with little uncertainty are those where we are very confident about the future. We might not always get the mean prediction correct - this is a very hard problem to predict. But we can get well calibrated ranges so that we are 95% certain the true outcome will lie within these bounds. 
 </div>
 
-## Map of predicted change
-<div style="font-size:0.7em">
-Timeseries of observed change in overall HM 1990-2020 and predicted change 2020-2050 - Yucatan Peninsula
-![](/images/1_fullts.gif)
+## Maps of predicted change and uncertainty
 
-Difference between upper and lower bounds of predicted change 2030 - Yucatan Peninsula
-![](/images/2_uncer.gif)
+<div style="font-size:0.5em">
+Below are some exmaples of region of interest that hihglight current HM and predicted changes between 2020 and 2040
+ <br><br>
+legend for HM images:<br>
+![](/images/leg.png)
 
-</div>
+### Brazil - Mato Grosso
 
-## Model insights
-<div style="font-size:0.7em">
-What is driving the change? We can poke the model to find out which covariates are most important overall and for individual pixels. 
+![Mato Grosso](/images/am_ar.png)
+<br>
+Observed HM in 2020
+<iframe frameborder="0" class="juxtapose" width="100%" height="579.3003618817853" src="https://cdn.knightlab.com/libs/juxtapose/latest/embed/index.html?uid=1430f122-9476-11f0-ba1b-0e6f42328d7d"></iframe>
+<br>
+Observed HM in 2020 vs Predicted HM in 2040
+<iframe frameborder="0" class="juxtapose" width="100%" height="583.2946859903382" src="https://cdn.knightlab.com/libs/juxtapose/latest/embed/index.html?uid=e2e26070-9479-11f0-ba1b-0e6f42328d7d"></iframe>
 
+<br>
+upper 
+<iframe frameborder="0" class="juxtapose" width="100%" height="583.2938331318018" src="https://cdn.knightlab.com/libs/juxtapose/latest/embed/index.html?uid=70378e0e-948a-11f0-ba1b-0e6f42328d7d"></iframe>
+
+<br>
+intact
+<br>
+![](/images/int_leg.png)
+<br>
+<iframe frameborder="0" class="juxtapose" width="100%" height="641" src="https://cdn.knightlab.com/libs/juxtapose/latest/embed/index.html?uid=033f6af0-9495-11f0-ba1b-0e6f42328d7d"></iframe>
 <br><br>
-![](/images/importance.png)<br><br>
-![](/images/variable_importance.png)
+
+### Yucatán Peninsula
+![Yucatán Peninsula](/images/sm_ar.png)
+<br>
+Observed HM in 2020
+<iframe frameborder="0" class="juxtapose" width="100%" height="506" src="https://cdn.knightlab.com/libs/juxtapose/latest/embed/index.html?uid=db3585c4-9487-11f0-ba1b-0e6f42328d7d"></iframe>
+<br>
+Observed HM in 2020 vs Predicted HM in 2040
+<iframe frameborder="0" class="juxtapose" width="100%" height="507.15894039735093" src="https://cdn.knightlab.com/libs/juxtapose/latest/embed/index.html?uid=12690e44-9488-11f0-ba1b-0e6f42328d7d"></iframe>
+<br>
+
+
+upper
+<iframe frameborder="0" class="juxtapose" width="100%" height="506.99999999999994" src="https://cdn.knightlab.com/libs/juxtapose/latest/embed/index.html?uid=edc71b1a-9489-11f0-ba1b-0e6f42328d7d"></iframe>
+<br>
+intact
+<br>
+![](/images/int_leg.png)
+<br>
+<iframe frameborder="0" class="juxtapose" width="100%" height="637.8305084745763" src="https://cdn.knightlab.com/libs/juxtapose/latest/embed/index.html?uid=111cd74e-9494-11f0-ba1b-0e6f42328d7d"></iframe>
 <br><br>
 
-more work to come here
 </div>
+
+## Known artefacts 
+
+test
 
 ## Globe (Mapbox + WMS) {data-visibility="hidden"}
 
@@ -1315,17 +1372,8 @@ more work to come here
 ---
 
 ## Downloads
-Coming soon....
 
-## Improvements
-Hurricanes vs HM
-<div style="font-size:0.7em">
-Ensembles are needed for hurricane forecasts because a single average windspeed or rainfall hides the range of plausible outcomes. Different model runs (or slightly different starting conditions) can produce very different tracks, intensities and timing — and impacts (storm surge, rainfall) are highly nonlinear in windspeed. An ensemble shows the spread and probability of extreme outcomes so forecasters can communicate risk (e.g., “10% chance of hurricane-force winds here”) instead of a misleading single average number.
-
-![](/images/hurricane.png)
-
-The same logic applies to land-cover or human-impact forecasts: these systems are driven by many uncertain processes (policy choices, development, fires, climate) and small differences can lead to very different spatial outcomes. A mean map blurs alternative futures and can hide hotspots or tipping points; an ensemble of scenarios/models reveals where change is likely, how certain that is, and the tails that matter for planning and conservation.
-</div>
+Box folder for TNC staff here
 
 ## Questions
 
