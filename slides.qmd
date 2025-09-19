@@ -875,6 +875,16 @@ Switch between years and lower, median or upper forecasts to expore data. Data f
       const LAYER_IDS = { 1: 'xyz-layer-1', 2: 'xyz-layer-2' };
       const SOURCE_IDS = { 1: 'xyz-source-1', 2: 'xyz-source-2' };
 
+      // Always keep panel 1 (Bottom layer) below panel 2 (Top layer)
+      function enforceOrder() {
+        try {
+          if (map.getLayer(LAYER_IDS[1])) map.moveLayer(LAYER_IDS[1]); // send to top temporarily
+          if (map.getLayer(LAYER_IDS[2])) map.moveLayer(LAYER_IDS[2]); // ensure layer 2 ends up on top
+        } catch (e) {
+          console.warn('Layer ordering warning:', e);
+        }
+      }
+
       // Function to update layer source with new year/param
       const updateLayer = (panel, param, year, opacity) => {
         const layerId = LAYER_IDS[panel];
@@ -897,6 +907,8 @@ Switch between years and lower, median or upper forecasts to expore data. Data f
           source: sourceId,
           paint: { 'raster-opacity': opacity }
         });
+        // Re-apply canonical order after any update
+        enforceOrder();
       };
 
       // Helper to apply opacity to existing layer
@@ -929,6 +941,8 @@ Switch between years and lower, median or upper forecasts to expore data. Data f
       updateLayer(2, initParam2, initYear2, initOp2);
       if (op1Val) op1Val.textContent = initOp1.toFixed(2);
       if (op2Val) op2Val.textContent = initOp2.toFixed(2);
+      // Ensure initial z-order is correct (Bottom below Top)
+      enforceOrder();
 
       // Event listeners for layer 1
       const updateLayer1 = () => {
