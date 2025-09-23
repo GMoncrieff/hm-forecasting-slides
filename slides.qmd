@@ -7,6 +7,7 @@ format:
   revealjs:
     theme: simple
     slide-number: true
+
     # ↓↓↓ add these two lines
     scrollable: true     # allow the page itself to scroll
     center: false        # start content at the top, not vertically centred
@@ -1521,8 +1522,8 @@ HM uncertainty is defined as the difference between the upper (97.5%) predicted 
 ---
 
 ## Downloads
-<br><br><br><br><br><br>
-Box folder for TNC staff with data and symbolology <br><br>
+<br><br><br>
+Box folder for TNC staff with data and symbolology <br>
 [here](https://tnc.box.com/s/b488ihv2pa3j81qrm8qgsct1e14ivyfp)
 
 ## Questions
