@@ -50,10 +50,15 @@ Recognizing this trade-off, we do not attempt to forecasts HM at fine scale or f
 The forecasts presented here build directly on the Global Human Modification (HM) time series. Using this historical HM record, we produce global, 1-km resolution forecasts of overall HM from 2020 to 2040 and provide calibrated uncertainty intervals for each forecast horizon. These layers offer plausible trajectories of cumulative human pressure that are consistent with observed patterns and rates in the underlying HM time series. They allow planners and decision makers to consider where cumulative human pressures—not just conversion—are likely to intensify, enabling threat-aware, forward-looking prioritisation. We use a multi-horizon forecast approach to predict human modification at every 5 year interval from 2020 to 2040. We use a range of covariates to predict human modification, including population, economic development, and infrastructure development. The multi-horizon approach allows us to forecast human modification at different time horizons, from short-term (5 year) to long-term (20 year). 
 <br><br>
 Potential reuse includes: <br><br>
+
 - risk-based site selection for protected and conserved areas and other area-based measures aligned with GBF Target 1
+
 - prospective evaluation of conservation additionality by comparing observed threat outcomes to expected trajectories
+
 - integration as pressure inputs to biodiversity impact models (e.g., GLOBIO) and ecosystem-condition indicators
+
 - screening in spatial planning and environmental assessment where forward-looking pressure maps can complement land-use scenarios.
+
 </div>
 
 ## Model description
@@ -1516,27 +1521,39 @@ HM uncertainty is defined as the difference between the upper (97.5%) predicted 
 ---
 
 ## Downloads
-
-Box folder for TNC staff with data and symbolology [here](https://tnc.box.com/s/b488ihv2pa3j81qrm8qgsct1e14ivyfp)
+<br><br><br><br><br><br>
+Box folder for TNC staff with data and symbolology <br><br>
+[here](https://tnc.box.com/s/b488ihv2pa3j81qrm8qgsct1e14ivyfp)
 
 ## Questions
 <div style="font-size:0.5em">
 Thank you for taking the time to review this analysis and dataset. Below are some example questions we would like you to consider. You are also welcome to share any other thoughts or comments. We would be extremely grateful for your feedback. This information will be used to update the analysis and improve the model.
 <br><br>
+
 - For regions familiar to you, in which areas do the predictions match your expectations? In which areas do they not?
+
 - Are there obvious errors or unreasonable patterns?
+
 - Are there regions where the uncertainty is too high or too low? 
+
 - In places where the model is not performing well, can you think of additional information that might help improve the predictions?
+
 - How would you use this information to make decisions relevant to your strategy or business unit?
+
 - Are you aware of any analyses or datasets for which this information could be used as an input?
+
 - Are there decisions or analyses for which existing land conversion forecasts are not relevant but this information is?
+
 - What improvements or additions to this analysis would you like to see?
+
 <br><br>
 
 </div>
 
 <div style="font-size:0.6em">
-<b>Send your feedback to glenn.moncrieff@tnc.org</b>
+<b>Send your feedback to:</b>
+<br>
+[glenn.moncrieff@tnc.org](mailto:glenn.moncrieff@tnc.org)
 </div>
 
 
