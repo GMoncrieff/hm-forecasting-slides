@@ -14,7 +14,7 @@ format:
 output-file: index.html
 ---
 
-## Global Human Modification
+## Global Human Modification explained
 
 <div style="font-size:0.5em">
  The Global Human Modification (HM) index [Theobald et al 2024](https://www.nature.com/articles/s41597-025-04892-2) measures the impact of human activites on nature by quantifying the distribution and intesnity of 14 threats globally. It ranges from 0 (no human impact) to 1 (maximum human impact). These 14 threats are summarized into a single cumulative index representing the overall impact of human activities on nature. A time series of this index is available from 1990 to 2020 every 5 years at 300m resolution for both the individual threats and the cumulative index. 
@@ -22,10 +22,10 @@ output-file: index.html
 [![](/images/hm1.png)](https://www.nature.com/articles/s41597-025-04892-2)
 </div>
 
-## Forecasting HM
+## Why and how to forecast Human Modification
 <div style="font-size:0.5em">
 Forecasts of human impacts help us anticipate where and when pressures on ecosystems are likely to intensify, allowing proactive rather than reactive action. By linking projected changes to planning, they guide decisions on where to prioritize protection, restoration, or policy interventions for the greatest long-term benefit.
-
+<br>
 ![Impact](/images/impact1.png) <br>
 But forecasting human impacts is not easy. There is a trade-off between the level of detail in the forecast and the uncertainty/accuracy of the forecast.
 <br>
@@ -45,23 +45,30 @@ _The global average temperature in 2030_<br><br>
 Recognizing this trade-off, we do not attempt to forecasts HM at fine scale or far into the future. Instead, we focus on forecasting HM at 1km resolution for the period 2020-2040. 
 </div>
 
-## Our approach
+## Forecasting methodology
 <div style="font-size:0.5em">
 The forecasts presented here build directly on the Global Human Modification (HM) time series. Using this historical HM record, we produce global, 1-km resolution forecasts of overall HM from 2020 to 2040 and provide calibrated uncertainty intervals for each forecast horizon. These layers offer plausible trajectories of cumulative human pressure that are consistent with observed patterns and rates in the underlying HM time series. They allow planners and decision makers to consider where cumulative human pressures—not just conversion—are likely to intensify, enabling threat-aware, forward-looking prioritisation. We use a multi-horizon forecast approach to predict human modification at every 5 year interval from 2020 to 2040. We use a range of covariates to predict human modification, including population, economic development, and infrastructure development. The multi-horizon approach allows us to forecast human modification at different time horizons, from short-term (5 year) to long-term (20 year). 
 <br><br>
-Potential reuse includes (i) risk-based site selection for protected and conserved areas and other area-based measures aligned with GBF Target 1; (ii) prospective evaluation of conservation additionality by comparing observed threat outcomes to expected trajectories; (iii) integration as pressure inputs to biodiversity impact models (e.g., GLOBIO) and ecosystem-condition indicators; and (iv) screening in spatial planning and environmental assessment where forward-looking pressure maps can complement land-use scenarios.
+Potential reuse includes: <br><br>
+- risk-based site selection for protected and conserved areas and other area-based measures aligned with GBF Target 1
+- prospective evaluation of conservation additionality by comparing observed threat outcomes to expected trajectories
+- integration as pressure inputs to biodiversity impact models (e.g., GLOBIO) and ecosystem-condition indicators
+- screening in spatial planning and environmental assessment where forward-looking pressure maps can complement land-use scenarios.
 </div>
 
-## The model
+## Model description
 <div style="font-size:0.5em">
+
 ### Overview
+
 The overall structure of the model is to take both static and dynamic covariates and historical HM and convert these into tabular data, where each pixel is a row. This is then used to train a gradient-boosted tree model. The target for prediction is future HM at different time horizons. For example, if we are training a model using covariates and historical data on HM from 1990, 1995 and 2000, we can train one model to predict 5 years ahead (2005), another to predict 10 years ahead (2010), another 15 years ahead (2015), and another 20 years ahead (2020). After training these models, we can now give them the same covariates and any three successive HM observations (e.g. 2010, 2015, 2020) to produce predictions at these multiple time horizons (e.g. 2025, 2030, 2035, 2040). 
-
-Important to note is that we do not use development scenarios or naartiaves to drive forecast. Rather, models are trianed in historical data and then use to preict the future. This can be thought of as using a business as usual scenario to drive the forecast. But business as-usual is not soley based on a individua sites hisotriy, but learnt from trying to predict the observed devlopment of other sites with simlar hisotires/covariates.
-
+<br><br>
+Important to note is that we do not use development scenarios or narratives to drive forecasts. Rather, models are trained on historical data and then used to predict the future. This can be thought of as using a business-as-usual scenario to drive the forecast. But business as usual is not solely based on an individual site's history, but learned from trying to predict the observed development of other sites with similar histories/covariates.
+<br><br>
 ![](/images/hm_model2.gif){style="width:300%"}
 
 ### Model covariates
+<br>
 _Static covariates_
 
 - **Protected areas (WDPA)** 
@@ -109,36 +116,44 @@ The full dataset is stratified by the level 4 H3 index, and 10% of all primarily
 
 ### Fitting and Calibration 
 
-Forecasts are produced in Python using MLForecast. MLForecast handles multi-step targets and lag/transform feature generation for each series. The base learner is LightGBM trained with the quantile objective.  
+Forecasts are produced in Python using MLForecast. MLForecast handles multi-step targets and lag/transform feature generation for each series. The base learner is LightGBM trained with the quantile objective. <br> 
 We fit separate models for each horizon (i.e. 5 years ahead, 10 years ahead, 15 years ahead, 20 years ahead) at α=0.50 (median) and α  ∈  {0.025, 0.975}, creating a separate prediction for the median, upper and lower quantiles. From these quantiles we obtain 95% prediction bands. The raw quantile bands are then calibrated (i.e. adjusted up or down) using a held-out calibration split to ensure that the coverage of prediction intervals matches the 95% target (the true value will fall within the prediction intervals in 95/100 samples on average) using conformal prediction.  We quantify point-forecast accuracy with mean absolute error. 
 </div>
 
-## Model performance
+## Model performance and accuracy
 <div style="font-size:0.5em">
-Comparing the fitted models against baseline assumptions - In the absence of a model we might assume either the status quo (zero change) or a linear trend. How does our model compare to these baselines over different horizons? In the figure below ‘Multihorizon’ represents the median prediction from the multihorizon model, ‘Zero’ assumes that future HM does not change for the last observed HM. ‘Linear’ assumes HM continues to increase at the same rate observed between the last  2 observations. 
+Comparing the fitted models against baseline assumptions - In the absence of a model, we might assume either the status quo (zero change) or a linear trend. How does our model compare to these baselines over different horizons? In the figure below, ‘Multihorizon’ represents the median prediction from the multihorizon model, ‘Zero’ assumes that future HM does not change from the last observed HM. ‘Linear’ assumes HM continues to increase at the same rate observed between the last 2 observations. <br>
  ![](/images/horizon.png)
-
- Assuming that 5 years time will be the same as now is a hard baseline to beat, but as we go further into the future the model becomes better. It is never a great idea to assume that the change we last observed will continue in the future. 
+<br>
+ Assuming that 5 years from now will be the same as now is a hard baseline to beat, but as we go further into the future, the model becomes better. It is never a great idea to assume that the change we last observed will continue in the future. 
 
  <br><br>
- How well can we predict HM in 20 years time? THe figure belpw shows modelled vs observed HM with a 20 year forecast horizon (i.e. predicting 2020 with data up to 2000). HM is scaled by 10000 (i.e. 1000 = 0.1 HM, 10000 = 1 HM). <br><br> ![](/images/abs_err.png)  <br><br>Very well!  <br><br>
- But remember, just assuming it wont change works pretty well, so predicting the absolute value is not that hard
+ How well can we predict HM in 20 years' time? The figure below shows modeled vs observed HM with a 20-year forecast horizon (i.e. predicting 2020 with data up to 2000). HM is scaled by 10,000 (i.e. 1,000 = 0.1 HM, 10,000 = 1 HM). 
+ <br><br> 
+ ![](/images/abs_err.png) 
+<br><br>
+Very well!  
+<br><br>
+ But remember, just assuming it won't change works pretty well, so predicting the absolute value is not that hard.
  <br><br>
-  How well can we predict how much HM will change in 20 years time?  Below we see modelled vs observed HM change over a 20 year forecast horizon (i.e. predicting change from 2000 to 2020 with data from 2000 to 1990). Again, HM is scaled by 10000. <br><br> ![](/images/diff_err.png)  <br><br> It is hard, but we get the overall direction and magnitude right
+ How well can we predict how much HM will change in 20 years' time? Below we see modeled vs observed HM change over a 20-year forecast horizon (i.e. predicting change from 2000 to 2020 with data from 1990 to 2000). Again, HM is scaled by 10,000. 
+ <br><br> 
+ ![](/images/diff_err.png)  
+ <br><br> It is hard, but we get the overall direction and magnitude right.
  <br><br>
 </div>
 
 ## Comparing predictions to observations
 
 <div style="font-size:0.5em">
-What do individual pixels look like? Below we see how HM predicted from 2005 to 2020 based on data from 1990-2000, comparing predictions to observations. We see some in which it is quite certain they will remain intact and not change (first panel), Some that are high and expected to remain stable (second panel) some that are expected to reamin intact, but where loss of condition is a potential outcome (third panel), we suspect might become less intact. Latley we also see example where the a large change is observed, but the median prediction does not capture this. However, the wide uncertaitny band indicates that the models does not rule out this outcome (fourth panel). Including uncertainty captures the range of possible outcomes and helps us understand the risk of different scenarios.
+What do individual pixels look like? Below we see how HM predicted from 2005 to 2020 based on data from 1990-2000, comparing predictions to observations. We see some in which it is quite certain they will remain intact and not change (first panel), some that are high and expected to remain stable (second panel), some that are expected to remain intact, but where loss of condition is a potential outcome (third panel), and lastly, we also see examples where a large change is observed, but the median prediction does not capture this. However, the wide uncertainty band indicates that the model does not rule out this outcome (fourth panel). Including uncertainty captures the range of possible outcomes and helps us understand the risk of different scenarios.
  <br><br>
 ![](/images/timeseries.png)
   <br><br>
-Large changes in HM or major industrail development are rare events. It is not unexpected that the model rarely predicted this to be the most likely outcome. What is encouraging is that the model helps us map where we cannot rule out that there will be a large change in the future. Likewise, areas with little uncertainty are those where we are very confident about the future. We might not always get the mean prediction correct - this is a very hard problem to predict. But we can get well calibrated ranges so that we are 95% certain the true outcome will lie within these bounds. 
+Large changes in HM or major industrial development are rare events. It is not unexpected that the model rarely predicted this to be the most likely outcome. What is encouraging is that the model helps us map where we cannot rule out that there will be a large change in the future. Likewise, areas with little uncertainty are those where we are very confident about the future. We might not always get the mean prediction correct - this is a very hard problem to predict. But we can get well-calibrated ranges so that we are 95% certain the true outcome will lie within these bounds. 
 </div>
 
-## Maps of predicted change and uncertainty
+## Focal areas - Maps of predicted change and uncertainty
 
 <div style="font-size:0.5em">
 Below are some examples of regions of interest that highlight current HM and predicted changes between 2020 and 2040. Interactive maps allowing full exploration of the data are available on subsequent slides.
@@ -160,7 +175,7 @@ In Mato Grosso, Brazil, large areas of Amazon forest and Cerrado savanna have be
 <iframe frameborder="0" class="juxtapose" width="100%" height="583.2946859903382" src="https://cdn.knightlab.com/libs/juxtapose/latest/embed/index.html?uid=e2e26070-9479-11f0-ba1b-0e6f42328d7d"></iframe>
 
 <br>
-HM is predicted to increasly broadly acorss the defreostiaotn frontier, hover we do not predict that deforestion or very large increases in HM are the most likeyl outcome. Even at the defreostation fonrtier, forest loss over a 20 year priod is raley more likley tha  not. However, the predicted HM increases indicated that the model agres that there region is at risk of deforetation.
+HM is predicted to increasingly broadly across the deforestation frontier; however, we do not predict that deforestation or very large increases in HM are the most likely outcome. Even at the deforestation frontier, forest loss over a 20-year period is rarely more likely than not. However, the predicted HM increases indicate that the model agrees that this region is at risk of deforestation.
 <br>
 
 #### Median HM in 2040 vs upper 95% confidence limit
@@ -169,10 +184,10 @@ HM is predicted to increasly broadly acorss the defreostiaotn frontier, hover we
 
 <br>
  
-When we look at the upper 95% confidence limit, we see that the model predicted that a very wide area is at risk of severse increase in HM. This highlights the challegne of predicting rare events that results in large changes in HM, like deforestation. THese changes seldom occur, even in areas at high risk. The model therefore predict a moderatin increase in HM that balances the risk of deforestation with the risk of not deforesting. In these case it is more informative to look at the upper 95% confidence limit to understand if drasdtic chagne is within the range of possible outcomes.
+When we look at the upper 95% confidence limit, we see that the model predicted that a very wide area is at risk of severe increases in HM. This highlights the challenge of predicting rare events that result in large changes in HM, like deforestation. In the historical data, these changes appear common, but they are still less likely than stasis, even in areas at high risk. The model therefore predicts a moderate increase in HM that balances the risk of deforestation with the risk of not deforesting. In these cases, it is more informative to look at the upper 95% confidence limit to understand if drastic change is within the range of possible outcomes.
 <br>
 
-#### Predicted intact / natural lands in 2040 based on lower, median or upper band predictions.
+#### Predicted intact / natural lands in 2040 based on lower, median, or upper band predictions.
 
 <br>
 
@@ -180,12 +195,11 @@ When we look at the upper 95% confidence limit, we see that the model predicted 
 <br>
 <iframe frameborder="0" class="juxtapose" width="100%" height="641" src="https://cdn.knightlab.com/libs/juxtapose/latest/embed/index.html?uid=033f6af0-9495-11f0-ba1b-0e6f42328d7d"></iframe>
 <br>
-We can define a thrshold HM value above which we may beleive lands can no longer be assumed to be natural. Here we choose 0.1 HM as the threshold, and map the extent of intact lands in 2040 and intact lands lost between 2020 and 2040 based on HM modelled at differen confidence levels. Oragne indicated that loss of natural lands between 2020 and 2040 is the most likley outcome, Pink indicated that loss is possible under the worst case (upper 95%) scenario and purple indicates that land remain imact in 2040 even in the worst case scenario.
+We can define a threshold HM value above which we may believe lands can no longer be assumed to be natural. Here we choose 0.1 HM as the threshold, and map the extent of intact lands in 2040 and intact lands lost between 2020 and 2040 based on HM modeled at different confidence levels. Orange indicates that loss of natural lands between 2020 and 2040 is the most likely outcome, pink indicates that loss is possible under the worst-case (upper 95%) scenario, and purple indicates that land remains intact in 2040 even in the worst-case scenario.
 <br>
 
 ### Yucatán Peninsula
-
-In the Yucatán Peninsula, forest cover is being lost mostly around expanding agriculture, pasture, and urban/tourism development. Drivers include changing land tenure, proximity to roads and markets, soil fertility, and economic incentives and government programmes for agricultural intensification.
+In the Yucatán Peninsula, forest cover is being lost mostly around expanding agriculture, pasture, and urban/tourism development. Drivers include changing land tenure, proximity to roads and markets, soil fertility, and economic incentives and government programs for agricultural intensification.
 ![Yucatán Peninsula](/images/sm_ar.png)
 <br>
 
@@ -196,10 +210,9 @@ In the Yucatán Peninsula, forest cover is being lost mostly around expanding ag
 
 #### Observed HM in 2020 vs Predicted HM in 2040
 
-
 <iframe frameborder="0" class="juxtapose" width="100%" height="507.15894039735093" src="https://cdn.knightlab.com/libs/juxtapose/latest/embed/index.html?uid=12690e44-9488-11f0-ba1b-0e6f42328d7d"></iframe>
 <br>
-Despite deforestatin and development occuring in many region of the Yucatan Peninsula in the hirstial period, in the median ofrecast the is little large scale change predicted. Some areas around major urban centers and the agricultural frontier show modest increases in HM.
+Despite deforestation and development occurring in many regions of the Yucatán Peninsula in the historical period, in the median forecast there is little large-scale change predicted. Some areas around major urban centers and the agricultural frontier show modest increases in HM.
 
 #### Median HM in 2040 vs upper 95% confidence limit
 <br>
@@ -207,22 +220,60 @@ Despite deforestatin and development occuring in many region of the Yucatan Peni
 <iframe frameborder="0" class="juxtapose" width="100%" height="506.99999999999994" src="https://cdn.knightlab.com/libs/juxtapose/latest/embed/index.html?uid=edc71b1a-9489-11f0-ba1b-0e6f42328d7d"></iframe>
 <br>
 
-The upper 95% confidence liimitnhighlights the potetnial for agricultural intensifycation and futher development around existing frontiers
+The upper 95% confidence limit highlights the potential for agricultural intensification and further development around existing frontiers, demonstrating that though not the most likely outcome, vast areas are at risk. 
+<br>
+This result may seem counter to our understanding of risk in this landscape. Sure, there is risk of further deforestation, but it is not possible that all of this area will be degraded by 2040. An important point to understand is that these maps show per pixel uncertainty. The model is not saying that there is a chance that all of this area will be deforested simultaneously by 2040, but rather that for each of the highlighted pixels independently, there is a chance. A useful analogy for this is rolling dice. If you roll one die, there is a 1/6 chance you will get a 6, but if you roll 1000 dice, there is an almost 0% chance all will be 6s. 
 
-#### Predicted intact / natural lands in 2040 based on lower, median or upper band predictions.
+#### Predicted intact / natural lands in 2040 based on lower, median, or upper band predictions.
 
 <br>
 ![](/images/int_leg.png)
 <br>
-<iframe frameborder="0" class="juxtapose" width="100%" height="637.8305084745763" src="https://cdn.knightlab.com/libs/juxtapose/latest/embed/index.html?uid=111cd74e-9494-11f0-ba1b-0e6f42328d7d"></iframe>
+As in the example of Mato Grosso, large regions are shown as at risk of loss of natural lands in the worst-case scenario. A relatively small area is at risk of loss of natural lands in the median scenario. A distinct spatial pattern is also apparent, with regions in the south and west of the image experiencing greater loss of natural land in the worst-case scenario. 
 <br>
-AS in the example of Mato Grosso lrage regions are show as at risk of loss of natural lands in the worst case scenario. A relativly small area is at risk of loss of natural lands in the median scenario. A disitinct spatial pattern is also appraten, with regions of the south and west of the image experienin gretera loss of natural land in the worst case scenario. 
+
+</div>
+
+## Applications of these data
+<div style="font-size:0.5em">
+
+There are multiple existing global datasets that provide information on conversion risk, typically through forecasts of future land cover (look out for a forthcoming paper from our team comparing these). There are also an array of tools that allow you to create your own local land cover forecasts if you have a series of historical land cover data and driver variables. You may be familiar with a TNC product called the Conversion Pressure Index (CPI) which combines information on past changes in HM with maps of future development pressure to estimate the potential for land conversion.
+<br>
+<br>
+The Human Modification forecasts we provide here go beyond these existing datasets and allow for a number of more nuanced analyses and deeper consideration of threats to biodiversity. This is principally because we do not just provide a prediction of where natural habitats will be converted but rather estimate a continuous metric of human pressure. We attempt to predict not only when wholesale conversion of natural habitats will occur but also when minor loss of condition in pristine environments will occur. We can also predict if a moderately modified habitat will undergo further intensification. This is important because even a minor increase in human pressure through, for example, increased human intrusion into a habitat may result in a cascade of ecological changes that results in a significant loss of biodiversity. Likewise, a moderately modified habitat may still accommodate a diversity of species and allow for a range of ecological processes to continue, but this can be threatened by further intensification. Forecasts that only predict wholesale land conversion cannot capture this nuance.
+<br>
+<br>
+In addition, most forecast models do not account for uncertainty in their predictions. While it is common practice to use multiple development scenarios (e.g., SSPs), this leaves most uncertainty unaccounted for, as even given a set development trajectory, there are many ways development could unfold. Our forecasts use historical patterns to estimate the per-pixel uncertainty in future human modification. As our results show, rarely is severe degradation the most likely outcome. Rather, there is a limited area directly at the frontier of development where this is true, but large swathes of land are at low-to-medium risk of HM intensification. This is important information for conservation decision-making. The level of risk to nature that is acceptable is a decision that must be made in light of multiple other factors such as biodiversity value, ecosystem services, and social and economic factors. If we only account for the location where wholesale change is the most likely outcome, we vastly underestimate the risk.
+
+<br>
+<br>
+Below are some examples to illustrate these points and insights that can be gained
+
+#### Example from Yucatan Peninsula
+
+Below is a point in the core of the Balam Kin Wildlife Protection Area. This intact forest ecosystem has experienced little human modification to date, and forecasts show that this is unlikely to change in the near term. Importantly, the upper forecast band is also very low, indicating that even under a pessimistic scenario, this area is not at risk of severe degradation.
+
+<br>
+![](/images/stable_ts.png)
+<br>
+
+In an area of rapid development with historical patterns of deforestation south-west of Campeche, a location that is currently forested and not developed is predicted to remain undeveloped in the median forecast, but the upper forecast shows that this area is at risk of severe degradation in the worst-case scenario. This illustrates how even in areas of rapid development often the most likely outcome is stasis. However, there remain high risks, and this is demonstrated by the upper forecast band.
+
+<br>
+![](/images/uncertain_ts.png)
+<br>
+
+Lastly, a location in the southern fringe of Merida that has already been somewhat modified in recent decades is predicted to undergo further intensification even in the median forecast, with the upper band indicating the possibility of intensive development.
+
+<br>
+![](/images/increase_ts.png)
 <br>
 
 </div>
 
 ## Known artefacts 
-These results should be considered preliminary and subject to change as the model is refined and validated. We are aware of a number of issues and artefacts described below:
+<div style="font-size:0.5em">
+These results should be considered preliminary and subject to change as the model is refined and validated. We are aware of a number of issues and artifacts described below:
 
 ### 1. Striping near the poles 
 
@@ -230,15 +281,15 @@ Example from Siberia:
 <br>
 ![](/images/pole.png)
 <br>
-Most likely cause is encoding of lat/long using spherical harmonic. Potential fix is to increase harmonic order, change the way we encode lat/long or simply remove lat/long covariates. 
+Most likely cause is encoding of lat/long using spherical harmonics. Potential fix is to increase harmonic order, change the way we encode lat/long, or simply remove lat/long covariates. 
 
 ### 2. Hexagonal patterns introduced by H3 gridding 
 
-Example from Amazon basin: 
+Example from the Amazon basin: 
 <br>
 ![](/images/hex.png)
 <br>
-Caused by h3 covariates and reflects the underly hexagon strucutre of neighbourhoods. Potential fix is to use a more complex neighbourhood hood calculation, but this will greatly increase model runtime. 
+Caused by H3 covariates and reflects the underlying hexagonal structure of neighborhoods. Potential fix is to use a more complex neighborhood calculation, but this will greatly increase model runtime. 
 
 ### 3. Prediction bands decreasing over time 
 <br>
@@ -246,6 +297,7 @@ Caused by h3 covariates and reflects the underly hexagon strucutre of neighbourh
 <br>
 We would expect prediction bands to only increase over time. Potential cause is conformal adjustment. Need to check if original, uncalibrated prediction bands do or do not show this pattern. 
 
+</div>
 
 ## Globe (Mapbox + WMS) {data-visibility="hidden"}
 
@@ -721,9 +773,14 @@ We would expect prediction bands to only increase over time. Potential cause is 
 </script>
 
 
-## Human modification forecast {.scrollable}
+## Interactive map - HM forecast {.scrollable}
 
-Switch between years and lower, median or upper forecasts to expore data. Data from 1990-2020 is observed, and only avaialbe for th median (observed) values. From 2025 to 2040 values are forecastas and available at lower (2.5%), middle (median) and upper (97.5%) percentiles. You can click any point on the map to see the values for that location.
+<div style="font-size:0.5em">
+
+Here you can fully explore the HM forecasts for any region. Switch between years and lower, median, or upper forecasts to explore data. Data from 1990-2020 is observed and only available for the median (observed) values. From 2025 to 2040, values are forecasted and available at lower (2.5%), middle (median), and upper (97.5%) percentiles. You can click any point on the map to see the values for that location.
+
+</div>
+
 ```{=html}
 <link href="https://unpkg.com/maplibre-gl@5.0.0/dist/maplibre-gl.css" rel="stylesheet" />
 <style>
@@ -1111,8 +1168,14 @@ Switch between years and lower, median or upper forecasts to expore data. Data f
 
 ---
 
-## Change in extent of intact lands
-We can define a thrshold HM value above which we may beleive lands can no longer be assumed to be natural. Here we choose 0.1 HM as the threshold, and map the extent of intact lands in 2040 and intact lands lost between 2020 and 2040 based on HM modelled at differen confidence levels. Oragne indicated that loss of natural lands between 2020 and 2040 is the most likley outcome, Pink indicated that loss is possible under the worst case (upper 95%) scenario and purple indicates that land remain imact in 2040 even in the worst case scenario.
+## Interactive map - Intact lands
+
+<div style="font-size:0.5em">
+
+We can define a threshold HM value above which we may believe lands can no longer be assumed to be natural. Here we choose 0.1 HM as the threshold, and map the extent of intact lands in 2040 and intact lands lost between 2020 and 2040 (going above 0.1) based on HM modeled at different confidence levels. Orange indicates that loss of natural lands between 2020 and 2040 is the most likely outcome, Pink indicates that loss is possible under the worst-case (upper 95%) scenario, and purple indicates that land remains intact in 2040 even in the worst-case scenario.
+
+</div>
+
 ```{=html}
 <style>
   /* Scoped styles for 2nd MapLibre legend (Inferno categories) */
@@ -1220,7 +1283,13 @@ We can define a thrshold HM value above which we may beleive lands can no longer
 
 ---
 
-## HM increase 2020-2040
+## Interactive map - HM increase
+
+<div style="font-size:0.5em">
+
+HM increase is defined as the difference between the median predicted 2040 HM value and the observed 2020 HM value. 
+
+</div>
 
 ```{=html}
 <style>
@@ -1330,7 +1399,13 @@ We can define a thrshold HM value above which we may beleive lands can no longer
 
 ---
 
-## Uncertainty in 2040
+## Interactive map - Uncertainty
+
+<div style="font-size:0.5em">
+
+HM uncertainty is defined as the difference between the upper (97.5%) predicted 2040 HM value and the lower (2.5%) predicted 2040 HM value.
+
+</div>
 
 ```{=html}
 <style>
@@ -1442,8 +1517,26 @@ We can define a thrshold HM value above which we may beleive lands can no longer
 
 ## Downloads
 
-Box folder for TNC staff here
+Box folder for TNC staff with data and symbolology [here](https://tnc.box.com/s/b488ihv2pa3j81qrm8qgsct1e14ivyfp)
 
 ## Questions
+<div style="font-size:0.5em">
+Thank you for taking the time to review this analysis and dataset. Below are some example questions we would like you to consider. You are also welcome to share any other thoughts or comments. We would be extremely grateful for your feedback. This information will be used to update the analysis and improve the model.
+<br><br>
+- For regions familiar to you, in which areas do the predictions match your expectations? In which areas do they not?
+- Are there obvious errors or unreasonable patterns?
+- Are there regions where the uncertainty is too high or too low? 
+- In places where the model is not performing well, can you think of additional information that might help improve the predictions?
+- How would you use this information to make decisions relevant to your strategy or business unit?
+- Are you aware of any analyses or datasets for which this information could be used as an input?
+- Are there decisions or analyses for which existing land conversion forecasts are not relevant but this information is?
+- What improvements or additions to this analysis would you like to see?
+<br><br>
 
-glenn.moncrieff@tnc.org
+</div>
+
+<div style="font-size:0.6em">
+<b>Send your feedback to glenn.moncrieff@tnc.org</b>
+</div>
+
+
