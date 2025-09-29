@@ -211,12 +211,12 @@ In the Yucatán Peninsula, forest cover is being lost mostly around expanding ag
 
 #### Observed HM in 2020
 
-<iframe frameborder="0" class="juxtapose" width="100%" height="506" src="https://cdn.knightlab.com/libs/juxtapose/latest/embed/index.html?uid=db3585c4-9487-11f0-ba1b-0e6f42328d7d"></iframe>
+<iframe frameborder="0" class="juxtapose" width="100%" height="506.99999999999994" src="https://cdn.knightlab.com/libs/juxtapose/latest/embed/index.html?uid=db3585c4-9487-11f0-ba1b-0e6f42328d7d"></iframe>
 <br>
 
 #### Observed HM in 2020 vs Predicted HM in 2040
 
-<iframe frameborder="0" class="juxtapose" width="100%" height="507.15894039735093" src="https://cdn.knightlab.com/libs/juxtapose/latest/embed/index.html?uid=12690e44-9488-11f0-ba1b-0e6f42328d7d"></iframe>
+<iframe frameborder="0" class="juxtapose" width="100%" height="506.99999999999994" src="https://cdn.knightlab.com/libs/juxtapose/latest/embed/index.html?uid=12690e44-9488-11f0-ba1b-0e6f42328d7d"></iframe>
 <br>
 Despite deforestation and development occurring in many regions of the Yucatán Peninsula in the historical period, in the median forecast there is little large-scale change predicted. Some areas around major urban centers and the agricultural frontier show modest increases in HM.
 
