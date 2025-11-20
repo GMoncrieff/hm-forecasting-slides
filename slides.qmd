@@ -165,87 +165,6 @@ What do individual pixels look like? Below we see how HM predicted from 2005 to 
 Large changes in HM or major industrial development are rare events. It is not unexpected that the model rarely predicted this to be the most likely outcome. What is encouraging is that the model helps us map where we cannot rule out that there will be a large change in the future. Likewise, areas with little uncertainty are those where we are very confident about the future. We might not always get the mean prediction correct - this is a very hard problem to predict. But we can get well-calibrated ranges so that we are 95% certain the true outcome will lie within these bounds. 
 </div>
 
-## Focal areas - Maps of predicted change and uncertainty
-
-<div style="font-size:0.5em">
-Below are some examples of regions of interest that highlight current HM and predicted changes between 2020 and 2040. Interactive maps allowing full exploration of the data are available on subsequent slides.
- <br><br>
-legend for HM images:<br>
-![](/images/leg.png)
-
-### Brazil - Mato Grosso
-In Mato Grosso, Brazil, large areas of Amazon forest and Cerrado savanna have been cleared over the past two decades, mainly for cattle pasture and increasingly for soybean cultivation.
-![Mato Grosso](/images/am_ar.png)
-<br>
-
-#### Observed HM in 2020
-
-<iframe frameborder="0" class="juxtapose" width="100%" height="579.3003618817853" src="https://cdn.knightlab.com/libs/juxtapose/latest/embed/index.html?uid=1430f122-9476-11f0-ba1b-0e6f42328d7d"></iframe>
-<br>
-
-#### Observed HM in 2020 vs Predicted HM in 2040
-<iframe frameborder="0" class="juxtapose" width="100%" height="583.2946859903382" src="https://cdn.knightlab.com/libs/juxtapose/latest/embed/index.html?uid=e2e26070-9479-11f0-ba1b-0e6f42328d7d"></iframe>
-
-<br>
-HM is predicted to increasingly broadly across the deforestation frontier; however, we do not predict that deforestation or very large increases in HM are the most likely outcome. Even at the deforestation frontier, forest loss over a 20-year period is rarely more likely than not. However, the predicted HM increases indicate that the model agrees that this region is at risk of deforestation.
-<br>
-
-#### Median HM in 2040 vs upper 95% confidence limit
-
-<iframe frameborder="0" class="juxtapose" width="100%" height="583.2938331318018" src="https://cdn.knightlab.com/libs/juxtapose/latest/embed/index.html?uid=70378e0e-948a-11f0-ba1b-0e6f42328d7d"></iframe>
-
-<br>
- 
-When we look at the upper 95% confidence limit, we see that the model predicted that a very wide area is at risk of severe increases in HM. This highlights the challenge of predicting rare events that result in large changes in HM, like deforestation. In the historical data, these changes appear common, but they are still less likely than stasis, even in areas at high risk. The model therefore predicts a moderate increase in HM that balances the risk of deforestation with the risk of not deforesting. In these cases, it is more informative to look at the upper 95% confidence limit to understand if drastic change is within the range of possible outcomes.
-<br>
-
-#### Predicted intact / natural lands in 2040 based on lower, median, or upper band predictions.
-
-<br>
-
-![](/images/int_leg.png)
-<br>
-<iframe frameborder="0" class="juxtapose" width="100%" height="641" src="https://cdn.knightlab.com/libs/juxtapose/latest/embed/index.html?uid=033f6af0-9495-11f0-ba1b-0e6f42328d7d"></iframe>
-<br>
-We can define a threshold HM value above which we may believe lands can no longer be assumed to be natural. Here we choose 0.1 HM as the threshold, and map the extent of intact lands in 2040 and intact lands lost between 2020 and 2040 based on HM modeled at different confidence levels. Orange indicates that loss of natural lands between 2020 and 2040 is the most likely outcome, pink indicates that loss is possible under the worst-case (upper 95%) scenario, and purple indicates that land remains intact in 2040 even in the worst-case scenario.
-<br>
-
-### Yucatán Peninsula
-In the Yucatán Peninsula, forest cover is being lost mostly around expanding agriculture, pasture, and urban/tourism development. Drivers include changing land tenure, proximity to roads and markets, soil fertility, and economic incentives and government programs for agricultural intensification.
-![Yucatán Peninsula](/images/sm_ar.png)
-<br>
-
-#### Observed HM in 2020
-
-<iframe frameborder="0" class="juxtapose" width="100%" height="506.99999999999994" src="https://cdn.knightlab.com/libs/juxtapose/latest/embed/index.html?uid=db3585c4-9487-11f0-ba1b-0e6f42328d7d"></iframe>
-<br>
-
-#### Observed HM in 2020 vs Predicted HM in 2040
-
-<iframe frameborder="0" class="juxtapose" width="100%" height="506.99999999999994" src="https://cdn.knightlab.com/libs/juxtapose/latest/embed/index.html?uid=12690e44-9488-11f0-ba1b-0e6f42328d7d"></iframe>
-<br>
-Despite deforestation and development occurring in many regions of the Yucatán Peninsula in the historical period, in the median forecast there is little large-scale change predicted. Some areas around major urban centers and the agricultural frontier show modest increases in HM.
-
-#### Median HM in 2040 vs upper 95% confidence limit
-<br>
-
-<iframe frameborder="0" class="juxtapose" width="100%" height="506.99999999999994" src="https://cdn.knightlab.com/libs/juxtapose/latest/embed/index.html?uid=edc71b1a-9489-11f0-ba1b-0e6f42328d7d"></iframe>
-<br>
-
-The upper 95% confidence limit highlights the potential for agricultural intensification and further development around existing frontiers, demonstrating that though not the most likely outcome, vast areas are at risk. 
-<br>
-This result may seem counter to our understanding of risk in this landscape. Sure, there is risk of further deforestation, but it is not possible that all of this area will be degraded by 2040. An important point to understand is that these maps show per pixel uncertainty. The model is not saying that there is a chance that all of this area will be deforested simultaneously by 2040, but rather that for each of the highlighted pixels independently, there is a chance. A useful analogy for this is rolling dice. If you roll one die, there is a 1/6 chance you will get a 6, but if you roll 1000 dice, there is an almost 0% chance all will be 6s. 
-
-#### Predicted intact / natural lands in 2040 based on lower, median, or upper band predictions.
-
-<br>
-![](/images/int_leg.png)
-<br>
-As in the example of Mato Grosso, large regions are shown as at risk of loss of natural lands in the worst-case scenario. A relatively small area is at risk of loss of natural lands in the median scenario. A distinct spatial pattern is also apparent, with regions in the south and west of the image experiencing greater loss of natural land in the worst-case scenario. 
-<br>
-
-</div>
-
 ## Applications of these data
 <div style="font-size:0.5em">
 
@@ -283,33 +202,6 @@ Lastly, a location in the southern fringe of Merida that has already been somewh
 
 </div>
 
-## Known artefacts 
-<div style="font-size:0.5em">
-These results should be considered preliminary and subject to change as the model is refined and validated. We are aware of a number of issues and artifacts described below:
-
-### 1. Striping near the poles 
-
-Example from Siberia: 
-<br>
-![](/images/pole.png)
-<br>
-Most likely cause is encoding of lat/long using spherical harmonics. Potential fix is to increase harmonic order, change the way we encode lat/long, or simply remove lat/long covariates. 
-
-### 2. Hexagonal patterns introduced by H3 gridding 
-
-Example from the Amazon basin: 
-<br>
-![](/images/hex.png)
-<br>
-Caused by H3 covariates and reflects the underlying hexagonal structure of neighborhoods. Potential fix is to use a more complex neighborhood calculation, but this will greatly increase model runtime. 
-
-### 3. Prediction bands decreasing over time 
-<br>
-![](/images/band.png)
-<br>
-We would expect prediction bands to only increase over time. Potential cause is conformal adjustment. Need to check if original, uncalibrated prediction bands do or do not show this pattern. 
-
-</div>
 
 ## Globe (Mapbox + WMS) {data-visibility="hidden"}
 
